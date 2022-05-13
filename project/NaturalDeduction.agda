@@ -18,36 +18,39 @@ module NaturalDeduction (AtomicFormula : Set) where
 
 open import Data.List  using (List; []; _∷_; [_]; _++_) public
 open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n; s≤s)
-open import Data.Fin using (Fin; zero; suc)
-{-
+open import Data.Fin using (Fin)
+
+{-From lectures: 
+
 The language of a first-order theory is described by a signature, which consists of:
 - a list of function symbols fᵢ each of which has an arity nᵢ ∈ ℕ,
 - a list of relation symbols Rᵢ each of which has an arity kⱼ ∈ ℕ.
 -}
 
 {-
-   Formulae of propositional logic taken from lectures and exercises.
+   Basis for formulae taken from lectures and exercises on propositional logic.
 -}
--- Exp (n : ℕ)
+
+-- expressions and formulaes have to be in context of n variables
 data Exp (n : ℕ) : Set where
--- Fin n → Exp n
-    `_ : n → Exp n -- expression z n spremenljivkami
-    zero : Exp n -- lahko se pojavljajo spremenljivke do n (ne nujno)
+    `_ : Fin n → Exp n -- expression with n variables
+    zero : Exp n -- expression with n variables (not necessarily all of them)
+    -- x + y is an expression in x, y, z 
     suc : Exp n → Exp n
     _+_ : Exp n → Exp n → Exp n
     _*_ : Exp n → Exp n → Exp n
 
 
-data Formula (n : Set) : Set where
+data Formula (n : ℕ) : Set where
 --   `_  : AtomicFormula → Formula n          -- atomic formula
   ⊤   : Formula n                          -- truth (unicode \top)
   ⊥   : Formula n                          -- falsehood (unicode \bot)
-  _≡_ : Exp n → Exp n → Formula n
   _∧_ : Formula n → Formula n → Formula n       -- conjunction (unicode \wedge)
   _∨_ : Formula n → Formula n → Formula n       -- disjunction (unicode \vee)
   _⇒_ : Formula n → Formula n → Formula n       -- implication (unicode \=>)
---   ∀∀_ : Formula → Formula                  -- for all
---   ∃_ : Formula → Formula                  -- exists
+--   ∀∀_ : Formula (suc n) → Formula n                 -- for all
+--   ∃_ : Formula (suc n) → Formula n                   -- exists :(
+--   _≡≡_ : Exp n → Exp n → Formula n
 
 infixr 6 _∧_
 infixr 5 _∨_
@@ -61,7 +64,10 @@ infixr 4 _⇒_
    Hypotheses are represented as a list of formulae.
 -}
 
-Hypotheses = List (Formula)
+-- hypotheses also need context of n variables
+Hypotheses : ℕ → Set
+Hypotheses n = List (Formula n)
+
 
 {-
    We use constructor instances when defining the formula-in-hypotheses
@@ -83,120 +89,121 @@ data _∈_ {A : Set} : A → List A → Set where
     ∈-here  : {x : A} → {xs : List A} → x ∈ (x ∷ xs)
     ∈-there : {x y : A} {xs : List A} → {{x ∈ xs}} → x ∈ (y ∷ xs)
 
-{-
-   Below is a natural deduction style proof calculus for **intuitionistic**
-   propositional logic, formalised as an inductive relation.
--}
 
-infixl 2 _⊢_
-data _⊢_ : (Δ : Hypotheses) → (φ : Formula) → Set where    -- unicode \vdash
+
+infixl 2 _,_⊢_
+data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set where    -- unicode \vdash
+
 
   -- structural rules
 
-  weaken   : {Δ₁ Δ₂ : Hypotheses}
-           → (φ : Formula)
-           → {ψ : Formula}
-           → Δ₁ ++ Δ₂ ⊢ ψ
-           -----------------------
-           → Δ₁ ++ [ φ ] ++ Δ₂ ⊢ ψ
+  weaken  : (n : ℕ) → {Δ₁ Δ₂ : Hypotheses n}
+           → (φ : Formula n)
+           → {ψ : Formula n}
+           → n , Δ₁ ++ Δ₂ ⊢ ψ
+           ---------------------------
+           → n , Δ₁ ++ [ φ ] ++ Δ₂ ⊢ ψ
 
-  contract : {Δ₁ Δ₂ : Hypotheses}
-           → (φ : Formula)
-           → {ψ : Formula}
-           → Δ₁ ++ [ φ ] ++ [ φ ] ++ Δ₂ ⊢ ψ
+  contract : (n : ℕ) → {Δ₁ Δ₂ : Hypotheses n}
+           → (φ : Formula n)
+           → {ψ : Formula n}
+           → n , Δ₁ ++ [ φ ] ++ [ φ ] ++ Δ₂ ⊢ ψ
            --------------------------------
-           → Δ₁ ++ [ φ ] ++ Δ₂ ⊢ ψ
+           → n , Δ₁ ++ [ φ ] ++ Δ₂ ⊢ ψ
 
-  exchange : {Δ₁ Δ₂ : Hypotheses}
-           → (φ₁ φ₂ : Formula)
-           → {ψ : Formula}
-           → Δ₁ ++ [ φ₁ ] ++ [ φ₂ ] ++ Δ₂ ⊢ ψ
+  exchange : (n : ℕ) → {Δ₁ Δ₂ : Hypotheses n}
+           → (φ₁ φ₂ : Formula n)
+           → {ψ : Formula n}
+           → n , Δ₁ ++ [ φ₁ ] ++ [ φ₂ ] ++ Δ₂ ⊢ ψ
            -----------------------------------------
-           → Δ₁ ++ [ φ₂ ] ++ [ φ₁ ] ++ Δ₂ ⊢ ψ
+           → n , Δ₁ ++ [ φ₂ ] ++ [ φ₁ ] ++ Δ₂ ⊢ ψ
 
   -- hypotheses
 
-  hyp      : {Δ : Hypotheses}
-           → (φ : Formula)
+  hyp      : (n : ℕ) → {Δ : Hypotheses n}
+           → (φ : Formula n)
            → {{φ ∈ Δ}}
            -----------------
-           → Δ ⊢ φ
+           → n , Δ ⊢ φ
 
   -- truth
 
-  ⊤-intro  : {Δ : Hypotheses}
+  ⊤-intro  : (n : ℕ) → {Δ : Hypotheses n}
            ------------------
-           → Δ ⊢ ⊤
+           → n , Δ ⊢ ⊤
 
   -- falsehood
 
-  ⊥-elim   : {Δ : Hypotheses}
-           → {φ : Formula}
-           → Δ ⊢ ⊥
+  ⊥-elim   : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ : Formula n}
+           → n , Δ ⊢ ⊥
            -------------------
-           → Δ ⊢ φ
+           → n , Δ ⊢ φ
 
   -- conjunction
 
-  ∧-intro  : {Δ : Hypotheses}
-           → {φ ψ : Formula}
-           → Δ ⊢ φ
-           → Δ ⊢ ψ
+  ∧-intro  : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ ψ : Formula n}
+           → n , Δ ⊢ φ
+           → n , Δ ⊢ ψ
            -------------------
-           → Δ ⊢ φ ∧ ψ
+           → n , Δ ⊢ φ ∧ ψ
           
-  ∧-elim₁  : {Δ : Hypotheses}
-           → {φ ψ : Formula}
-           → Δ ⊢ φ ∧ ψ
+  ∧-elim₁  : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ ψ : Formula n}
+           → n , Δ ⊢ φ ∧ ψ
            -------------------
-           → Δ ⊢ φ
+           → n , Δ ⊢ φ
 
-  ∧-elim₂  : {Δ : Hypotheses}
-           → {φ ψ : Formula}
-           → Δ ⊢ φ ∧ ψ
+  ∧-elim₂  : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ ψ : Formula n}
+           → n , Δ ⊢ φ ∧ ψ
            -------------------
-           → Δ ⊢ ψ
+           → n , Δ ⊢ ψ
 
   -- disjunction
 
-  ∨-intro₁ : {Δ : Hypotheses}
-           → {φ ψ : Formula}
-           → Δ ⊢ φ
+  ∨-intro₁ : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ ψ : Formula n}
+           → n , Δ ⊢ φ
            ------------------
-           → Δ ⊢ φ ∨ ψ
+           → n , Δ ⊢ φ ∨ ψ
 
-  ∨-intro₂ : {Δ : Hypotheses}
-           → {φ ψ : Formula}
-           → Δ ⊢ ψ
+  ∨-intro₂ : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ ψ : Formula n}
+           → n , Δ ⊢ ψ
            -------------------
-           → Δ ⊢ φ ∨ ψ
+           → n , Δ ⊢ φ ∨ ψ
 
-  ∨-elim   : {Δ : Hypotheses}
-           → {φ₁ φ₂ ψ : Formula}
-           → Δ ⊢ φ₁ ∨ φ₂
-           → Δ ++ [ φ₁ ] ⊢ ψ
-           → Δ ++ [ φ₂ ] ⊢ ψ
+  ∨-elim   : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ₁ φ₂ ψ : Formula n}
+           → n , Δ ⊢ φ₁ ∨ φ₂
+           → n , Δ ++ [ φ₁ ] ⊢ ψ
+           → n , Δ ++ [ φ₂ ] ⊢ ψ
            ---------------------
-           → Δ ⊢ ψ
+           → n , Δ ⊢ ψ
 
   -- implication
 
-  ⇒-intro  : {Δ : Hypotheses}
-           → {φ ψ : Formula}
-           → Δ ++ [ φ ] ⊢ ψ
+  ⇒-intro  : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ ψ : Formula n}
+           → n , Δ ++ [ φ ] ⊢ ψ
            --------------------
-           → Δ ⊢ φ ⇒ ψ
+           → n , Δ ⊢ φ ⇒ ψ
 
-  ⇒-elim   : {Δ : Hypotheses}
-           → {φ ψ : Formula}
-           → Δ ⊢ φ ⇒ ψ
-           → Δ ⊢ φ
+  ⇒-elim   : (n : ℕ) → {Δ : Hypotheses n}
+           → {φ ψ : Formula n}
+           → n , Δ ⊢ φ ⇒ ψ
+           → n , Δ ⊢ φ
            -------------------
-           → Δ ⊢ ψ
+           → n , Δ ⊢ ψ
 
 -- TODO 
 
---   ∀-intro  
+-- DeBrujin indices
+--   ∀-intro   : (n : ℕ) → {Δ : Hypotheses n}
+            
+  
 
 --   ∀-elim
 
@@ -204,19 +211,23 @@ data _⊢_ : (Δ : Hypotheses) → (φ : Formula) → Set where    -- unicode \v
 
 --   ∃-elim
 
+--   ≡≡-intro
+
+--   ≡≡-elim
+
 {-
    We define negation and logical equivalence as syntactic sugar.
    These definitions are standard logical encodings of `¬` and `⇔`.
 -}
 
-¬_ : Formula → Formula              -- unicode \neg
-¬ φ = φ ⇒ ⊥
+-- ¬_ : Formula → Formula              -- unicode \neg
+-- ¬ φ = φ ⇒ ⊥
 
-_⇔_ : Formula → Formula → Formula    -- unicode \<=>
-φ ⇔ ψ = (φ ⇒ ψ) ∧ (ψ ⇒ φ)
+-- _⇔_ : Formula → Formula → Formula    -- unicode \<=>
+-- φ ⇔ ψ = (φ ⇒ ψ) ∧ (ψ ⇒ φ)
 
-infix 7 ¬_
-infix 3 _⇔_
+-- infix 7 ¬_
+-- infix 3 _⇔_
 
 
 ----------------
@@ -228,74 +239,58 @@ infix 3 _⇔_
    are derivable for the logical encoding of `¬` defined above.
 -}
 
-¬-intro : {Δ : Hypotheses}
-        → {φ : Formula}
-        → Δ ++ [ φ ] ⊢ ⊥
-        → Δ ⊢ ¬ φ
+-- ¬-intro : {Δ : Hypotheses}
+--         → {φ : Formula}
+--         → Δ ++ [ φ ] ⊢ ⊥
+--         → Δ ⊢ ¬ φ
 
-¬-intro d = ⇒-intro d
+-- ¬-intro d = ⇒-intro d
 
-¬-elim : {Δ : Hypotheses}
-       → {φ : Formula}
-       → Δ ⊢ φ
-       → Δ ⊢ ¬ φ
-       → Δ ⊢ ⊥
+-- ¬-elim : {Δ : Hypotheses}
+--        → {φ : Formula}
+--        → Δ ⊢ φ
+--        → Δ ⊢ ¬ φ
+--        → Δ ⊢ ⊥
 
-¬-elim d₁ d₂ = ⇒-elim d₂ d₁
+-- ¬-elim d₁ d₂ = ⇒-elim d₂ d₁
 
-{-
-   Show that the last rule is also derivable when the assumptions
-   about `φ` and `¬ φ` being true are given as part of hypotheses.
--}
+-- {-
+--    Show that the last rule is also derivable when the assumptions
+--    about `φ` and `¬ φ` being true are given as part of hypotheses.
+-- -}
 
-¬-elim' : (φ : Formula)
-        → [ φ ] ++ [ ¬ φ ] ⊢ ⊥
+-- ¬-elim' : (φ : Formula)
+--         → [ φ ] ++ [ ¬ φ ] ⊢ ⊥
 
-¬-elim' φ = ⇒-elim (hyp (¬ φ)) (hyp φ)
-
-
-----------------
--- Exercise 2 --
-----------------
-
-{-
-   Show that the cut rule is derivable in the above natural deduction
-   system (by using the intro/elim-rules of other logical connectives).
-
-   Note 1: There are more than one possible derivations of the cut rule.
-
-   Note 2: While here the richness of our logic (i.e., the other logical
-   connectives) allows us to simply **derive** the cut rule as a single
-   concrete derivation, in more general settings one usually shows the
-   **admissibility** of the cut rule by induction on the (heights of)
-   the given derivations, e.g., see https://www.jstor.org/stable/420956.
--}
-
-cut-derivable : {Δ : Hypotheses}
-              → {φ ψ : Formula}
-              → Δ ⊢ φ
-              → Δ ++ [ φ ] ⊢ ψ
-              ------------------
-              → Δ ⊢ ψ
-
-cut-derivable d₁ d₂ = ⇒-elim (⇒-intro d₂) d₁
+-- ¬-elim' φ = ⇒-elim (hyp (¬ φ)) (hyp φ)
 
 
---------------------
--- Bonus Exercise --
---------------------
+-- ----------------
+-- -- Exercise 2 --
+-- ----------------
 
-{-
-   Show that (in addition to cut) the other three structural rules
-   (weakening, contraction, and exchange) are also admissible.
+-- {-
+--    Show that the cut rule is derivable in the above natural deduction
+--    system (by using the intro/elim-rules of other logical connectives).
 
-   For this it is best to create a copy of this file, remove these
-   three rules, and then define functions with corresponding types.
+--    Note 1: There are more than one possible derivations of the cut rule.
 
-   Hint: Instead of trying to define the functions corresponding to
-   these structural rules directly by induction on the given natural
-   deduction derivation, another approach would be to define general
-   renamings between contexts of hypothesis, together with their
-   action on derivations, and then use this action to apply suitable
-   renamings to a derivation to recover the three structural rules.
--}
+--    Note 2: While here the richness of our logic (i.e., the other logical
+--    connectives) allows us to simply **derive** the cut rule as a single
+--    concrete derivation, in more general settings one usually shows the
+--    **admissibility** of the cut rule by induction on the (heights of)
+--    the given derivations, e.g., see https://www.jstor.org/stable/420956.
+-- -}
+
+-- cut-derivable : {Δ : Hypotheses}
+--               → {φ ψ : Formula}
+--               → Δ ⊢ φ
+--               → Δ ++ [ φ ] ⊢ ψ
+--               ------------------
+--               → Δ ⊢ ψ
+
+-- cut-derivable d₁ d₂ = ⇒-elim (⇒-intro d₂) d₁
+
+
+
+     

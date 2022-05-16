@@ -33,7 +33,8 @@ The language of a first-order theory is described by a signature, which consists
 
 -- expressions and formulaes have to be in context of n variables
 data Exp (n : ℕ) : Set where
-    `_ : Fin n → Exp n -- expression with n variables
+   --  `_ : Fin n → Exp n -- expression with n variables
+    var_ : Fin n → Exp n
     zero : Exp n -- expression with n variables (not necessarily all of them)
     -- x + y is an expression in x, y, z 
     suc : Exp n → Exp n
@@ -48,16 +49,16 @@ data Formula (n : ℕ) : Set where
   _∧_ : Formula n → Formula n → Formula n       -- conjunction (unicode \wedge)
   _∨_ : Formula n → Formula n → Formula n       -- disjunction (unicode \vee)
   _⇒_ : Formula n → Formula n → Formula n       -- implication (unicode \=>)
---   ∀∀_ : Formula (suc n) → Formula n                 -- for all
---   ∃_ : Formula (suc n) → Formula n                   -- exists :(
+  ∀∀_ : Formula (suc n) → Formula n                 -- for all \forall\forall
+  ∃_ : Formula (suc n) → Formula n                   -- exists \exists
 --   _≡≡_ : Exp n → Exp n → Formula n
 
 infixr 6 _∧_
 infixr 5 _∨_
 infixr 4 _⇒_
 
--- infix 7 ∀∀_
--- infix 8 ∃_
+infix 7 ∀∀_ -- TODO popravi vrstni red
+infix 8 ∃_
 
 
 {-
@@ -198,99 +199,113 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
            -------------------
            → n , Δ ⊢ ψ
 
--- TODO 
+-- data Exp (n : ℕ) : Set where
+--     var_ : Fin n → Exp n
+--     zero : Exp n -- expression with n variables (not necessarily all of them)
+--     suc : Exp n → Exp n
+--     _+_ : Exp n → Exp n → Exp n
+--     _*_ : Exp n → Exp n → Exp n
 
--- DeBrujin indices
---   ∀-intro   : (n : ℕ) → {Δ : Hypotheses n}
-            
-  
+-- From instructions: 
+-- in order to write down the rules for quantifiers and equality, you will also need to define the operations of substituting 
+-- a free variable in a term or formula with another term
 
---   ∀-elim
 
---   ∃-intro
+
+Sub : ℕ → ℕ → Set 
+-- Sub n m = (i ∈ Fin n) → Exp m
+Sub n m = Fin n → Exp m 
+
+substₑ : ℕ → ℕ → Set 
+substₑ n m = Sub m n  →  Exp n → Exp m
+
+subst : ℕ → ℕ → Set 
+subst n m = Sub m n  → Formula n → Formula m
+
+
+
+-- Γ , Δ ⊢ t : A      Γ , Δ ⊢ u : ϕ(t)
+-- ---------------------------------
+-- Γ , Δ ⊢ ∃ x : A . ϕ(x)
+
+
+-- ∃-intro : (n : ℕ) → {Δ : Hypotheses suc n}
+--           → {ψ : Formula n} 
+--           → {ϕ : Δ → ψ}
+--           → (suc n) , Δ ⊢ ψ --term (expression)
+--           → (suc n) , Δ ⊢ ϕ(ψ)
+--        ---------------------------
+--             n , Δ ⊢ ∃  
+
+
+
 
 --   ∃-elim
 
+
+--   ∀∀-intro   : (n : ℕ) → {Δ : Hypotheses (suc n)}
+--             → {ψ : Formula (suc n)} 
+--             -- ­→ {φ : Formula n}
+--             → {`x : Exp n}
+--             → suc n , Δ ⊢ ψ  -- from hypotheses in n+1 variables we derive ψ
+--             ------------
+--             → n , Δ ⊢ (∀∀ `x , Formula n)
+
+--   ∀∀-elim    : (n : ℕ) → {Δ : Hypotheses (suc n)}
+--                → {φ : Formula n}
+--                → {λ : Δ → φ}
+--                → n , ∀∀ λ (Δ) ⊢ φ
+--                ---------------------------
+--                → n , Δ ⊢ λ _
+
+-- things are equal when they have equal parts
 --   ≡≡-intro
 
 --   ≡≡-elim
 
-{-
-   We define negation and logical equivalence as syntactic sugar.
-   These definitions are standard logical encodings of `¬` and `⇔`.
--}
-
--- ¬_ : Formula → Formula              -- unicode \neg
--- ¬ φ = φ ⇒ ⊥
-
--- _⇔_ : Formula → Formula → Formula    -- unicode \<=>
--- φ ⇔ ψ = (φ ⇒ ψ) ∧ (ψ ⇒ φ)
-
--- infix 7 ¬_
--- infix 3 _⇔_
 
 
-----------------
--- Exercise 1 --
-----------------
-
-{-
-   Show that the standard introduction and elimination rules of `¬`
-   are derivable for the logical encoding of `¬` defined above.
--}
-
--- ¬-intro : {Δ : Hypotheses}
---         → {φ : Formula}
---         → Δ ++ [ φ ] ⊢ ⊥
---         → Δ ⊢ ¬ φ
-
--- ¬-intro d = ⇒-intro d
-
--- ¬-elim : {Δ : Hypotheses}
---        → {φ : Formula}
---        → Δ ⊢ φ
---        → Δ ⊢ ¬ φ
---        → Δ ⊢ ⊥
-
--- ¬-elim d₁ d₂ = ⇒-elim d₂ d₁
-
--- {-
---    Show that the last rule is also derivable when the assumptions
---    about `φ` and `¬ φ` being true are given as part of hypotheses.
--- -}
-
--- ¬-elim' : (φ : Formula)
---         → [ φ ] ++ [ ¬ φ ] ⊢ ⊥
-
--- ¬-elim' φ = ⇒-elim (hyp (¬ φ)) (hyp φ)
-
-
--- ----------------
--- -- Exercise 2 --
--- ----------------
-
--- {-
---    Show that the cut rule is derivable in the above natural deduction
---    system (by using the intro/elim-rules of other logical connectives).
-
---    Note 1: There are more than one possible derivations of the cut rule.
-
---    Note 2: While here the richness of our logic (i.e., the other logical
---    connectives) allows us to simply **derive** the cut rule as a single
---    concrete derivation, in more general settings one usually shows the
---    **admissibility** of the cut rule by induction on the (heights of)
---    the given derivations, e.g., see https://www.jstor.org/stable/420956.
--- -}
-
--- cut-derivable : {Δ : Hypotheses}
---               → {φ ψ : Formula}
---               → Δ ⊢ φ
---               → Δ ++ [ φ ] ⊢ ψ
---               ------------------
---               → Δ ⊢ ψ
-
--- cut-derivable d₁ d₂ = ⇒-elim (⇒-intro d₂) d₁
+-- data _⊢_ : (n : ℕ) → Exp n → Set
+--     var_ : (i : ℕ) → i ≤ n → n ⊢ (var i) 
+--     -- every variable is a term
+--    --  zero : 
+--    --  suc : 
+--    --  _+_ : 
+--    --  _*_ :
 
 
 
-     
+
+
+
+
+
+
+
+
+-- Propositions as types in predicate logic
+-- sorts
+-- termspredicate ϕ(t) formula where t is term (expression)
+-- unit form t = unicodeprimitive predicate
+
+-- adding ∀ and ∃ - they are dependent on terms!
+-- x₁:A₁...xₙ:Aₙ ⊢ ϕ(x₁...xₙ)
+-- t =ₐ u .. identitiy type
+-- ∀ x ∈ A ϕ(x) ... Π(x∈A)ϕ(x)      video: 
+-- ∃_                ∑              video: 1h 30min
+
+-- context: Γ = x₁:A₁...xₙ:Aₙć
+--          Δ = ϕ₁ ... ϕₙ
+
+-- formula ϕ is a logical statement
+-- ϕ is provable is not the same as stating that p is a proof of ϕ
+-- ϕ should have at least one let
+-- the elements of ϕ are the proofs
+
+
+   
+
+
+
+
+      

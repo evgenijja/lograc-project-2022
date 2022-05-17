@@ -6,21 +6,22 @@
    slowdown and looping behaviour during instance search.
 -}
 
-{-# OPTIONS --overlapping-instances #-}
-
-
 {-
    Notice that we parametrise the deeply embedded propositional logic
    and its natural deduction proof system over a type of atomic formulaes.
 -}
 
-module NaturalDeduction (AtomicFormula : Set) where
+-- TO POBRIŠI KO BO V TEJ DATOTEKI VSE NAREJENO
+{-# OPTIONS --allow-unsolved-metas #-}
+
+
+module NaturalDeduction where
 
 open import Data.List  using (List; []; _∷_; [_]; _++_) public
 open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n; s≤s)
 open import Data.Fin using (Fin)
 
-{-From lectures: 
+{-From lectures:
 
 The language of a first-order theory is described by a signature, which consists of:
 - a list of function symbols fᵢ each of which has an arity nᵢ ∈ ℕ,
@@ -35,31 +36,68 @@ The language of a first-order theory is described by a signature, which consists
 data Exp (n : ℕ) : Set where
    --  `_ : Fin n → Exp n -- expression with n variables
     var_ : Fin n → Exp n
-    zero : Exp n -- expression with n variables (not necessarily all of them)
-    -- x + y is an expression in x, y, z 
-    suc : Exp n → Exp n
-    _+_ : Exp n → Exp n → Exp n
-    _*_ : Exp n → Exp n → Exp n
-
+    zeroᴾ : Exp n -- expression with n variables (not necessarily all of them)
+    -- x + y is an expression in x, y, z
+    sucᴾ : Exp n → Exp n
+    _+ᴾ_ : Exp n → Exp n → Exp n
+    _*ᴾ_ : Exp n → Exp n → Exp n
 
 data Formula (n : ℕ) : Set where
 --   `_  : AtomicFormula → Formula n          -- atomic formula
-  ⊤   : Formula n                          -- truth (unicode \top)
+  ⊤ᵖ   : Formula n                          -- truth (unicode \top)
   ⊥   : Formula n                          -- falsehood (unicode \bot)
   _∧_ : Formula n → Formula n → Formula n       -- conjunction (unicode \wedge)
   _∨_ : Formula n → Formula n → Formula n       -- disjunction (unicode \vee)
   _⇒_ : Formula n → Formula n → Formula n       -- implication (unicode \=>)
-  ∀∀_ : Formula (suc n) → Formula n                 -- for all \forall\forall
-  ∃_ : Formula (suc n) → Formula n                   -- exists \exists
---   _≡≡_ : Exp n → Exp n → Formula n
+  all_ : Formula (suc n) → Formula n                 -- for all \forall\forall
+  some_ : Formula (suc n) → Formula n                   -- exists \exists
+  _≈_ : Exp n → Exp n → Formula n -- ≈ is \approx
+
 
 infixr 6 _∧_
 infixr 5 _∨_
 infixr 4 _⇒_
 
-infix 7 ∀∀_ -- TODO popravi vrstni red
-infix 8 ∃_
+infix 3 all_
+infix 3 some_
 
+-- Substitution
+
+Sub : ℕ → ℕ → Set
+Sub n m = Fin n → Exp m
+
+subst-Exp : {n m : ℕ} → Sub n m → Exp n → Exp m
+subst-Exp σ (var x) = σ x
+subst-Exp σ zeroᴾ = zeroᴾ
+subst-Exp σ (sucᴾ t) = sucᴾ (subst-Exp σ t)
+subst-Exp σ (s +ᴾ t) = subst-Exp σ s +ᴾ subst-Exp σ t
+subst-Exp σ (s *ᴾ t) = subst-Exp σ s *ᴾ subst-Exp σ t
+
+shift-Exp : {n : ℕ} → Exp n → Exp (suc n)
+shift-Exp (var x) = var (Fin.suc x)
+shift-Exp zeroᴾ = zeroᴾ
+shift-Exp (sucᴾ t) = sucᴾ (shift-Exp t)
+shift-Exp (s +ᴾ t) = shift-Exp s +ᴾ shift-Exp t
+shift-Exp (s *ᴾ t) = shift-Exp s *ᴾ shift-Exp t
+
+shift : {n m : ℕ} → Sub n m → Sub (suc n) (suc m)
+shift σ Fin.zero = var Fin.zero
+shift σ (Fin.suc x) = shift-Exp (σ x)
+
+subst-Formula : {n m : ℕ} → Sub n m → Formula n → Formula m
+subst-Formula σ ⊤ᵖ = ⊤ᵖ
+subst-Formula σ ⊥ = ⊥
+subst-Formula σ (Ψ ∧ Θ) = subst-Formula σ Ψ ∧ subst-Formula σ Θ
+subst-Formula σ (Ψ ∨ Θ) = {!!}
+subst-Formula σ (Ψ ⇒ Θ) = {!!}
+subst-Formula σ (all Ψ) = {!!}
+subst-Formula σ (some Ψ) = some (subst-Formula (shift σ) Ψ)
+subst-Formula σ (s ≈ t) = (subst-Exp σ s ≈ subst-Exp σ t)
+
+-- substitute var 0 with the given term
+subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
+subst₀ t Fin.zero = t
+subst₀ t (Fin.suc x) = var x
 
 {-
    Hypotheses are represented as a list of formulae.
@@ -86,44 +124,17 @@ Hypotheses n = List (Formula n)
 
 infix 3 _∈_
 data _∈_ {A : Set} : A → List A → Set where
-  instance
-    ∈-here  : {x : A} → {xs : List A} → x ∈ (x ∷ xs)
-    ∈-there : {x y : A} {xs : List A} → {{x ∈ xs}} → x ∈ (y ∷ xs)
-
-
+  ∈-here  : {x : A} → {xs : List A} → x ∈ (x ∷ xs)
+  ∈-there : {x y : A} {xs : List A} → {{x ∈ xs}} → x ∈ (y ∷ xs)
 
 infixl 2 _,_⊢_
 data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set where    -- unicode \vdash
-
-
-  -- structural rules
-
-  weaken  : (n : ℕ) → {Δ₁ Δ₂ : Hypotheses n}
-           → (φ : Formula n)
-           → {ψ : Formula n}
-           → n , Δ₁ ++ Δ₂ ⊢ ψ
-           ---------------------------
-           → n , Δ₁ ++ [ φ ] ++ Δ₂ ⊢ ψ
-
-  contract : (n : ℕ) → {Δ₁ Δ₂ : Hypotheses n}
-           → (φ : Formula n)
-           → {ψ : Formula n}
-           → n , Δ₁ ++ [ φ ] ++ [ φ ] ++ Δ₂ ⊢ ψ
-           --------------------------------
-           → n , Δ₁ ++ [ φ ] ++ Δ₂ ⊢ ψ
-
-  exchange : (n : ℕ) → {Δ₁ Δ₂ : Hypotheses n}
-           → (φ₁ φ₂ : Formula n)
-           → {ψ : Formula n}
-           → n , Δ₁ ++ [ φ₁ ] ++ [ φ₂ ] ++ Δ₂ ⊢ ψ
-           -----------------------------------------
-           → n , Δ₁ ++ [ φ₂ ] ++ [ φ₁ ] ++ Δ₂ ⊢ ψ
 
   -- hypotheses
 
   hyp      : (n : ℕ) → {Δ : Hypotheses n}
            → (φ : Formula n)
-           → {{φ ∈ Δ}}
+           → (φ ∈ Δ)
            -----------------
            → n , Δ ⊢ φ
 
@@ -131,7 +142,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   ⊤-intro  : (n : ℕ) → {Δ : Hypotheses n}
            ------------------
-           → n , Δ ⊢ ⊤
+           → n , Δ ⊢ ⊤ᵖ
 
   -- falsehood
 
@@ -149,7 +160,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
            → n , Δ ⊢ ψ
            -------------------
            → n , Δ ⊢ φ ∧ ψ
-          
+
   ∧-elim₁  : (n : ℕ) → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ φ ∧ ψ
@@ -199,62 +210,67 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
            -------------------
            → n , Δ ⊢ ψ
 
--- data Exp (n : ℕ) : Set where
---     var_ : Fin n → Exp n
---     zero : Exp n -- expression with n variables (not necessarily all of them)
---     suc : Exp n → Exp n
---     _+_ : Exp n → Exp n → Exp n
---     _*_ : Exp n → Exp n → Exp n
+  -- universal quantifier
 
--- From instructions: 
--- in order to write down the rules for quantifiers and equality, you will also need to define the operations of substituting 
--- a free variable in a term or formula with another term
+  all-elim : (n : ℕ) → {Δ : Hypotheses n}
+          → {φ : Formula (suc n)}
+          → (t : Exp n)
+          → n , Δ ⊢ all φ
+          -----------------
+          → n , Δ ⊢ subst-Formula (subst₀ t) φ
 
+  -- equality
 
+  ≈-refl : (n : ℕ) → {Δ : Hypotheses n}
+         → (t : Exp n)
+         -------------
+         → n , Δ ⊢ t ≈ t
 
-Sub : ℕ → ℕ → Set 
--- Sub n m = (i ∈ Fin n) → Exp m
-Sub n m = Fin n → Exp m 
+  ≈-subt : (n : ℕ) → {Δ : Hypotheses n}
+         → {φ : Formula (suc n)}
+         → {t u : Exp n}
+         → n , Δ ⊢ subst-Formula (subst₀ t) φ
+         → n , Δ ⊢ t ≈ u
+         -----------------------
+         → n , Δ ⊢ subst-Formula (subst₀ u) φ
 
-substₑ : ℕ → ℕ → Set 
-substₑ n m = Sub m n  →  Exp n → Exp m
+  -- Peano axioms
 
-subst : ℕ → ℕ → Set 
-subst n m = Sub m n  → Formula n → Formula m
-
-
+  ≈-suc : (n : ℕ) → {Δ : Hypotheses n}
+        → {t u : Exp n}
+        → n , Δ ⊢ sucᴾ t ≈ sucᴾ u
+        -----------------------
+        → n , Δ ⊢ t ≈ u
 
 -- Γ , Δ ⊢ t : A      Γ , Δ ⊢ u : ϕ(t)
 -- ---------------------------------
--- Γ , Δ ⊢ ∃ x : A . ϕ(x)
+-- Γ , Δ ⊢ some x : A . ϕ(x)
 
 
--- ∃-intro : (n : ℕ) → {Δ : Hypotheses suc n}
---           → {ψ : Formula n} 
+-- some-intro : (n : ℕ) → {Δ : Hypotheses suc n}
+--           → {ψ : Formula n}
 --           → {ϕ : Δ → ψ}
 --           → (suc n) , Δ ⊢ ψ --term (expression)
 --           → (suc n) , Δ ⊢ ϕ(ψ)
 --        ---------------------------
---             n , Δ ⊢ ∃  
+--             n , Δ ⊢ some
 
 
+--   some-elim
 
 
---   ∃-elim
-
-
---   ∀∀-intro   : (n : ℕ) → {Δ : Hypotheses (suc n)}
---             → {ψ : Formula (suc n)} 
+--   all-intro   : (n : ℕ) → {Δ : Hypotheses (suc n)}
+--             → {ψ : Formula (suc n)}
 --             -- ­→ {φ : Formula n}
 --             → {`x : Exp n}
---             → suc n , Δ ⊢ ψ  -- from hypotheses in n+1 variables we derive ψ
+--             → suc n , Δ ⊢ ψ  -- from hypotheses in n+ᴾ1 variables we derive ψ
 --             ------------
---             → n , Δ ⊢ (∀∀ `x , Formula n)
+--             → n , Δ ⊢ (all `x , Formula n)
 
---   ∀∀-elim    : (n : ℕ) → {Δ : Hypotheses (suc n)}
+--   all-elim    : (n : ℕ) → {Δ : Hypotheses (suc n)}
 --                → {φ : Formula n}
 --                → {λ : Δ → φ}
---                → n , ∀∀ λ (Δ) ⊢ φ
+--                → n , all λ (Δ) ⊢ φ
 --                ---------------------------
 --                → n , Δ ⊢ λ _
 
@@ -266,11 +282,11 @@ subst n m = Sub m n  → Formula n → Formula m
 
 
 -- data _⊢_ : (n : ℕ) → Exp n → Set
---     var_ : (i : ℕ) → i ≤ n → n ⊢ (var i) 
+--     var_ : (i : ℕ) → i ≤ n → n ⊢ (var i)
 --     -- every variable is a term
---    --  zero : 
---    --  suc : 
---    --  _+_ : 
+--    --  zeroᴾ :
+--    --  suc :
+--    --  _+ᴾ_ :
 --    --  _*_ :
 
 
@@ -288,11 +304,11 @@ subst n m = Sub m n  → Formula n → Formula m
 -- termspredicate ϕ(t) formula where t is term (expression)
 -- unit form t = unicodeprimitive predicate
 
--- adding ∀ and ∃ - they are dependent on terms!
+-- adding ∀ and some - they are dependent on terms!
 -- x₁:A₁...xₙ:Aₙ ⊢ ϕ(x₁...xₙ)
 -- t =ₐ u .. identitiy type
--- ∀ x ∈ A ϕ(x) ... Π(x∈A)ϕ(x)      video: 
--- ∃_                ∑              video: 1h 30min
+-- ∀ x ∈ A ϕ(x) ... Π(x∈A)ϕ(x)      video:
+-- some_                ∑              video: 1h 30min
 
 -- context: Γ = x₁:A₁...xₙ:Aₙć
 --          Δ = ϕ₁ ... ϕₙ
@@ -301,11 +317,3 @@ subst n m = Sub m n  → Formula n → Formula m
 -- ϕ is provable is not the same as stating that p is a proof of ϕ
 -- ϕ should have at least one let
 -- the elements of ϕ are the proofs
-
-
-   
-
-
-
-
-      

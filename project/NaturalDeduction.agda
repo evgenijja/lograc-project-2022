@@ -45,18 +45,18 @@ data Exp (n : ℕ) : Set where
 data Formula (n : ℕ) : Set where
 --   `_  : AtomicFormula → Formula n          -- atomic formula
   ⊤ᵖ   : Formula n                          -- truth (unicode \top)
-  ⊥   : Formula n                          -- falsehood (unicode \bot)
-  _∧_ : Formula n → Formula n → Formula n       -- conjunction (unicode \wedge)
-  _∨_ : Formula n → Formula n → Formula n       -- disjunction (unicode \vee)
-  _⇒_ : Formula n → Formula n → Formula n       -- implication (unicode \=>)
+  ⊥ᵖ   : Formula n                          -- falsehood (unicode \bot)
+  _∧ᵖ_ : Formula n → Formula n → Formula n       -- conjunction (unicode \wedge)
+  _∨ᵖ_ : Formula n → Formula n → Formula n       -- disjunction (unicode \vee)
+  _⇒ᵖ_ : Formula n → Formula n → Formula n       -- implication (unicode \=>)
   all_ : Formula (suc n) → Formula n                 -- for all \forall\forall
   some_ : Formula (suc n) → Formula n                   -- exists \exists
-  _≈_ : Exp n → Exp n → Formula n -- ≈ is \approx
+  _≈ᵖ_ : Exp n → Exp n → Formula n -- ≈ᵖ is \approx
 
 
-infixr 6 _∧_
-infixr 5 _∨_
-infixr 4 _⇒_
+infixr 6 _∧ᵖ_
+infixr 5 _∨ᵖ_
+infixr 4 _⇒ᵖ_
 
 infix 3 all_
 infix 3 some_
@@ -86,13 +86,13 @@ shift σ (Fin.suc x) = shift-Exp (σ x)
 
 subst-Formula : {n m : ℕ} → Sub n m → Formula n → Formula m
 subst-Formula σ ⊤ᵖ = ⊤ᵖ
-subst-Formula σ ⊥ = ⊥
-subst-Formula σ (Ψ ∧ Θ) = subst-Formula σ Ψ ∧ subst-Formula σ Θ
-subst-Formula σ (Ψ ∨ Θ) = {!!}
-subst-Formula σ (Ψ ⇒ Θ) = {!!}
+subst-Formula σ ⊥ᵖ = ⊥ᵖ
+subst-Formula σ (Ψ ∧ᵖ Θ) = subst-Formula σ Ψ ∧ᵖ subst-Formula σ Θ
+subst-Formula σ (Ψ ∨ᵖ Θ) = {!!}
+subst-Formula σ (Ψ ⇒ᵖ Θ) = {!!}
 subst-Formula σ (all Ψ) = {!!}
 subst-Formula σ (some Ψ) = some (subst-Formula (shift σ) Ψ)
-subst-Formula σ (s ≈ t) = (subst-Exp σ s ≈ subst-Exp σ t)
+subst-Formula σ (s ≈ᵖ t) = (subst-Exp σ s ≈ᵖ subst-Exp σ t)
 
 -- substitute var 0 with the given term
 subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
@@ -148,7 +148,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   ⊥-elim   : (n : ℕ) → {Δ : Hypotheses n}
            → {φ : Formula n}
-           → n , Δ ⊢ ⊥
+           → n , Δ ⊢ ⊥ᵖ
            -------------------
            → n , Δ ⊢ φ
 
@@ -159,17 +159,17 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
            → n , Δ ⊢ φ
            → n , Δ ⊢ ψ
            -------------------
-           → n , Δ ⊢ φ ∧ ψ
+           → n , Δ ⊢ φ ∧ᵖ ψ
 
   ∧-elim₁  : (n : ℕ) → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
-           → n , Δ ⊢ φ ∧ ψ
+           → n , Δ ⊢ φ ∧ᵖ ψ
            -------------------
            → n , Δ ⊢ φ
 
   ∧-elim₂  : (n : ℕ) → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
-           → n , Δ ⊢ φ ∧ ψ
+           → n , Δ ⊢ φ ∧ᵖ ψ
            -------------------
            → n , Δ ⊢ ψ
 
@@ -179,17 +179,17 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
            → {φ ψ : Formula n}
            → n , Δ ⊢ φ
            ------------------
-           → n , Δ ⊢ φ ∨ ψ
+           → n , Δ ⊢ φ ∨ᵖ ψ
 
   ∨-intro₂ : (n : ℕ) → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ ψ
            -------------------
-           → n , Δ ⊢ φ ∨ ψ
+           → n , Δ ⊢ φ ∨ᵖ ψ
 
   ∨-elim   : (n : ℕ) → {Δ : Hypotheses n}
            → {φ₁ φ₂ ψ : Formula n}
-           → n , Δ ⊢ φ₁ ∨ φ₂
+           → n , Δ ⊢ φ₁ ∨ᵖ φ₂
            → n , Δ ++ [ φ₁ ] ⊢ ψ
            → n , Δ ++ [ φ₂ ] ⊢ ψ
            ---------------------
@@ -201,11 +201,11 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
            → {φ ψ : Formula n}
            → n , Δ ++ [ φ ] ⊢ ψ
            --------------------
-           → n , Δ ⊢ φ ⇒ ψ
+           → n , Δ ⊢ φ ⇒ᵖ ψ
 
   ⇒-elim   : (n : ℕ) → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
-           → n , Δ ⊢ φ ⇒ ψ
+           → n , Δ ⊢ φ ⇒ᵖ ψ
            → n , Δ ⊢ φ
            -------------------
            → n , Δ ⊢ ψ
@@ -224,13 +224,13 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
   ≈-refl : (n : ℕ) → {Δ : Hypotheses n}
          → (t : Exp n)
          -------------
-         → n , Δ ⊢ t ≈ t
+         → n , Δ ⊢ t ≈ᵖ t
 
   ≈-subt : (n : ℕ) → {Δ : Hypotheses n}
          → {φ : Formula (suc n)}
          → {t u : Exp n}
          → n , Δ ⊢ subst-Formula (subst₀ t) φ
-         → n , Δ ⊢ t ≈ u
+         → n , Δ ⊢ t ≈ᵖ u
          -----------------------
          → n , Δ ⊢ subst-Formula (subst₀ u) φ
 
@@ -238,41 +238,17 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   ≈-suc : (n : ℕ) → {Δ : Hypotheses n}
         → {t u : Exp n}
-        → n , Δ ⊢ sucᴾ t ≈ sucᴾ u
+        → n , Δ ⊢ sucᴾ t ≈ᵖ sucᴾ u
         -----------------------
-        → n , Δ ⊢ t ≈ u
+        → n , Δ ⊢ t ≈ᵖ u
 
 -- Γ , Δ ⊢ t : A      Γ , Δ ⊢ u : ϕ(t)
 -- ---------------------------------
 -- Γ , Δ ⊢ some x : A . ϕ(x)
 
 
--- some-intro : (n : ℕ) → {Δ : Hypotheses suc n}
---           → {ψ : Formula n}
---           → {ϕ : Δ → ψ}
---           → (suc n) , Δ ⊢ ψ --term (expression)
---           → (suc n) , Δ ⊢ ϕ(ψ)
---        ---------------------------
---             n , Δ ⊢ some
-
 
 --   some-elim
-
-
---   all-intro   : (n : ℕ) → {Δ : Hypotheses (suc n)}
---             → {ψ : Formula (suc n)}
---             -- ­→ {φ : Formula n}
---             → {`x : Exp n}
---             → suc n , Δ ⊢ ψ  -- from hypotheses in n+ᴾ1 variables we derive ψ
---             ------------
---             → n , Δ ⊢ (all `x , Formula n)
-
---   all-elim    : (n : ℕ) → {Δ : Hypotheses (suc n)}
---                → {φ : Formula n}
---                → {λ : Δ → φ}
---                → n , all λ (Δ) ⊢ φ
---                ---------------------------
---                → n , Δ ⊢ λ _
 
 -- things are equal when they have equal parts
 --   ≡≡-intro

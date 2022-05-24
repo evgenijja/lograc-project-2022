@@ -12,7 +12,6 @@ open import Function
 
 
 
-
 open import NaturalDeduction
 
 module Semantics where
@@ -33,11 +32,11 @@ module Semantics where
   ⟦_⟧ᶠ : {n : ℕ} → Formula n → Valuation n  → Set
   ⟦ ⊤ᵖ ⟧ᶠ η = ⊤
   ⟦ ⊥ᵖ ⟧ᶠ η = ⊥                                                         -- (alone) 
-  ⟦ φ ∧ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η × ⟦ ψ ⟧ᶠ η                                           -- (alone)  -- from exercises for propositional logic: ⟦ φ ∧ ψ ⟧ η = ⟦ φ ⟧ η and ⟦ ψ ⟧ η
+  ⟦ φ ∧ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η × ⟦ ψ ⟧ᶠ η                                    -- (alone)  -- from exercises for propositional logic: ⟦ φ ∧ ψ ⟧ η = ⟦ φ ⟧ η and ⟦ ψ ⟧ η
   ⟦ φ ∨ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η ⊎ ⟦ ψ ⟧ᶠ η                                   -- (alone)
-  ⟦ φ ⇒ᵖ ψ ⟧ᶠ η = (⟦ φ ⟧ᶠ η) → (⟦ ψ ⟧ᶠ η)                               -- (alone) 
+  ⟦ φ ⇒ᵖ ψ ⟧ᶠ η = (⟦ φ ⟧ᶠ η) → (⟦ ψ ⟧ᶠ η)                               -- (alone) not sure
                                                                         -- A → B : λ (x : A) → N where N is a term of type B containing as a free variable x of type A.
-  ⟦ all φ ⟧ᶠ η = {!   !} -- Π
+  ⟦ all φ ⟧ᶠ η = {!   !} -- Π -- primoerna uporaba ∀
   ⟦ some φ ⟧ᶠ η = {!   !} -- ∑
   ⟦ φ ≈ᵖ ψ ⟧ᶠ η = {!!}
 
@@ -56,12 +55,13 @@ module Semantics where
 
   soundness Δ (hyp _ _ x) η H = {!!}
   soundness Δ (⊤-intro _) η H = tt
-  soundness Δ (⊥-elim _ P) η H = {!!}
+  soundness Δ (⊥ᵖ-elim _ P) η H = ⊥-elim (soundness Δ P η H)                                    -- (alone) not sure
+                                -- P : n , Δ ⊢ ⊥ᵖ
   soundness Δ (∧-intro _ P Q) η H = (soundness Δ P η H) , (soundness Δ Q η H)                                                       
   soundness Δ (∧-elim₁ _ P) η H = proj₁ (soundness Δ P η H)                     
   soundness Δ (∧-elim₂ _ P) η H = proj₂ (soundness Δ P η H) 
-  soundness Δ (∨-intro₁ _ P) η H = {!!}
-  soundness Δ (∨-intro₂ _ P) η H = {!!}
+  soundness Δ (∨-intro₁ _ P) η H = inj₁ (soundness Δ P η H)                                     -- (alone) zakaj se z drugo barvo pobarva kot proj₁? :(
+  soundness Δ (∨-intro₂ _ P) η H = inj₂ (soundness Δ P η H)                                     -- (alone)
   soundness Δ (∨-elim _ P Q R) η H = {!!}
   soundness Δ (⇒-intro _ P) η H = {!!}
   soundness Δ (⇒-elim _ P Q) η H = {!!}
@@ -69,3 +69,5 @@ module Semantics where
   soundness Δ (≈-refl _ t) η H = {!!}
   soundness Δ (≈-subt _ P Q) η H = {!!}
   soundness Δ (≈-suc _ P) η H = {!!}
+ 
+ 

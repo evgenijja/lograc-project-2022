@@ -146,7 +146,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- falsehood
 
-  ⊥-elim   : (n : ℕ) → {Δ : Hypotheses n}
+  ⊥ᵖ-elim   : (n : ℕ) → {Δ : Hypotheses n}
            → {φ : Formula n}
            → n , Δ ⊢ ⊥ᵖ
            -------------------
@@ -215,9 +215,21 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
   all-elim : (n : ℕ) → {Δ : Hypotheses n}
           → {φ : Formula (suc n)}
           → (t : Exp n)
-          → n , Δ ⊢ all φ
+          → n , Δ ⊢ all φ 
           -----------------
           → n , Δ ⊢ subst-Formula (subst₀ t) φ
+
+-- subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
+-- subst₀ t Fin.zero = t
+-- subst₀ t (Fin.suc x) = var x
+
+--   all-intro 
+
+--   some-intro
+
+--   some-elim
+
+--  ≈-intro in elim ????
 
   -- equality
 
@@ -225,6 +237,8 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          → (t : Exp n)
          -------------
          → n , Δ ⊢ t ≈ᵖ t
+
+-- tukej mankata 2 izpeljave http://www.andrej.com/zapiski/ISRM-LOGRAC-2022/05-logic.lagda.html
 
   ≈-subt : (n : ℕ) → {Δ : Hypotheses n}
          → {φ : Formula (suc n)}
@@ -242,28 +256,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
         -----------------------
         → n , Δ ⊢ t ≈ᵖ u
 
--- Γ , Δ ⊢ t : A      Γ , Δ ⊢ u : ϕ(t)
--- ---------------------------------
--- Γ , Δ ⊢ some x : A . ϕ(x)
-
-
-
---   some-elim
-
--- things are equal when they have equal parts
---   ≡≡-intro
-
---   ≡≡-elim
-
-
-
--- data _⊢_ : (n : ℕ) → Exp n → Set
---     var_ : (i : ℕ) → i ≤ n → n ⊢ (var i)
---     -- every variable is a term
---    --  zeroᴾ :
---    --  suc :
---    --  _+ᴾ_ :
---    --  _*_ :
+-- manka 5 "lahkih" in 1 zelo tezek
 
 
 
@@ -274,22 +267,3 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
 
 
-
--- Propositions as types in predicate logic
--- sorts
--- termspredicate ϕ(t) formula where t is term (expression)
--- unit form t = unicodeprimitive predicate
-
--- adding ∀ and some - they are dependent on terms!
--- x₁:A₁...xₙ:Aₙ ⊢ ϕ(x₁...xₙ)
--- t =ₐ u .. identitiy type
--- ∀ x ∈ A ϕ(x) ... Π(x∈A)ϕ(x)      video:
--- some_                ∑              video: 1h 30min
-
--- context: Γ = x₁:A₁...xₙ:Aₙć
---          Δ = ϕ₁ ... ϕₙ
-
--- formula ϕ is a logical statement
--- ϕ is provable is not the same as stating that p is a proof of ϕ
--- ϕ should have at least one let
--- the elements of ϕ are the proofs

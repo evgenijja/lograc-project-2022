@@ -20,25 +20,55 @@ module Semantics where
   Valuation : ℕ → Set
   Valuation n = Fin n → ℕ
 
+
+  -- we want extended valuation for all and some semantics due to the cange in context
+  -- to use this in all and some semantics
+  Ext-valuation : {n : ℕ} → Valuation n → ℕ → Valuation (suc n)
+  Ext-valuation η n = {! !}
+
+--   Ext-valuation η xs = Fin.suc xs → η xs
+  --(λ { Fin.zero → x; (Fin.suc xs) → η xs }
+
+  -- anonymous function
+  -- x as the free variable - when we interpet we 'gain' one variable
+  -- valuation works on all ℕ so when talking about suc xs we use valuation on all xs or all ℕ
+  --{!(λ { Fin.zero → x; (Fin.suc xs) → η xs }) !}
+
+--   (λ { Fin.zero → x; (Fin.suc xs) → η xs })
+
   -- the meaning of an expression is a number
   -- ⟦ ⟧ dobimo z \[[ in \]]
   ⟦_⟧ᵉ : {n : ℕ} → Exp n → Valuation n  → ℕ
   ⟦ var x ⟧ᵉ η = η x                           --- η dobimo z \eta
   ⟦ zeroᴾ ⟧ᵉ η = 0
   ⟦ sucᴾ t ⟧ᵉ η = suc (⟦ t ⟧ᵉ η)
-  ⟦ s +ᴾ t ⟧ᵉ η = (⟦ s ⟧ᵉ η) + (⟦ t ⟧ᵉ η)                               -- (alone) 
-  ⟦ s *ᴾ t ⟧ᵉ η = (⟦ s ⟧ᵉ η) * (⟦ t ⟧ᵉ η)                               -- (alone) 
+  ⟦ s +ᴾ t ⟧ᵉ η = (⟦ s ⟧ᵉ η) + (⟦ t ⟧ᵉ η)                               -- a: 
+  ⟦ s *ᴾ t ⟧ᵉ η = (⟦ s ⟧ᵉ η) * (⟦ t ⟧ᵉ η)                               -- a: 
+
+
 
   ⟦_⟧ᶠ : {n : ℕ} → Formula n → Valuation n  → Set
   ⟦ ⊤ᵖ ⟧ᶠ η = ⊤
-  ⟦ ⊥ᵖ ⟧ᶠ η = ⊥                                                         -- (alone) 
-  ⟦ φ ∧ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η × ⟦ ψ ⟧ᶠ η                                    -- (alone)  -- from exercises for propositional logic: ⟦ φ ∧ ψ ⟧ η = ⟦ φ ⟧ η and ⟦ ψ ⟧ η
-  ⟦ φ ∨ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η ⊎ ⟦ ψ ⟧ᶠ η                                   -- (alone)
-  ⟦ φ ⇒ᵖ ψ ⟧ᶠ η = (⟦ φ ⟧ᶠ η) → (⟦ ψ ⟧ᶠ η)                               -- (alone) not sure
+  ⟦ ⊥ᵖ ⟧ᶠ η = ⊥                                                         -- a: 
+  ⟦ φ ∧ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η × ⟦ ψ ⟧ᶠ η                                    -- a:  -- from exercises for propositional logic: ⟦ φ ∧ ψ ⟧ η = ⟦ φ ⟧ η and ⟦ ψ ⟧ η
+  ⟦ φ ∨ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η ⊎ ⟦ ψ ⟧ᶠ η                                   -- a:
+  ⟦ φ ⇒ᵖ ψ ⟧ᶠ η = (⟦ φ ⟧ᶠ η) → (⟦ ψ ⟧ᶠ η)                               -- a: not sure
                                                                         -- A → B : λ (x : A) → N where N is a term of type B containing as a free variable x of type A.
-  ⟦ all φ ⟧ᶠ η = {!   !} -- Π -- primoerna uporaba ∀
-  ⟦ some φ ⟧ᶠ η = {!   !} -- ∑
+ 
+ 
+  ⟦ all φ ⟧ᶠ η =  (x : ℕ) → ⟦ φ ⟧ᶠ (λ { Fin.zero → x; (Fin.suc xs) → η xs }) 
+                                      -- this lambda is a valuation
+
+  ⟦ some φ ⟧ᶠ η = Σ[ x ∈ ℕ ] ⟦ φ ⟧ᶠ (λ { Fin.zero → x; (Fin.suc xs) → η xs }) -- not sure
+  
+                     -- Σ[ x ∈ A ] B x        A (λ x → B) 
   ⟦ φ ≈ᵖ ψ ⟧ᶠ η = {!!}
+
+
+
+
+
+
 
 
   ⟦_⟧ʰ : {n : ℕ} → Hypotheses n → Valuation n → Set
@@ -53,7 +83,13 @@ module Semantics where
           → ⟦ Δ ⟧ʰ η 
           → ⟦ φ ⟧ᶠ η
 
-  soundness Δ (hyp _ _ x) η H = {!!}
+--   hyp      : (n : ℕ) → {Δ : Hypotheses n}
+--            → (φ : Formula n)
+--            → (φ ∈ Δ)
+--            -----------------
+--            → n , Δ ⊢ φ
+
+  soundness Δ (hyp _ _ x) η H = {!!} -- x ni derivation zatu ne moreš na njem delat soundness, x je φ ∈ Δ
   soundness Δ (⊤-intro _) η H = tt
   soundness Δ (⊥ᵖ-elim _ P) η H = ⊥-elim (soundness Δ P η H)                                    -- (alone) not sure
                                 -- P : n , Δ ⊢ ⊥ᵖ
@@ -62,7 +98,10 @@ module Semantics where
   soundness Δ (∧-elim₂ _ P) η H = proj₂ (soundness Δ P η H) 
   soundness Δ (∨-intro₁ _ P) η H = inj₁ (soundness Δ P η H)                                     -- (alone) zakaj se z drugo barvo pobarva kot proj₁? :(
   soundness Δ (∨-intro₂ _ P) η H = inj₂ (soundness Δ P η H)                                     -- (alone)
-  soundness Δ (∨-elim _ P Q R) η H = {!!}
+  soundness Δ (∨-elim _ P Q R) η H = {!!} --((soundness (inj₁ soundness Δ P η H) Q η H) + (soundness (inj₂ soundness Δ P η H) R η H))
+        -- ϕ₁ inj₁ soundness p
+        -- soundness (Δ ++ (inj₁ soudness Δ P η H)) Q η H  tko bi rekla js za 
+
   soundness Δ (⇒-intro _ P) η H = {!!}
   soundness Δ (⇒-elim _ P Q) η H = {!!}
   soundness Δ (all-elim _ t P) η H = {!!} -- for all prod and sigmas 

@@ -1,7 +1,7 @@
 -- TO POBRIŠI KO BO V TEJ DATOTEKI VSE NAREJENO
 -- {-# OPTIONS --allow-unsolved-metas #-}
 
-open import Data.Nat
+open import Data.Nat 
 open import Data.Fin using (Fin)
 open import Data.Unit
 open import Data.Product
@@ -10,7 +10,8 @@ open import Data.Empty
 open import Function.Equivalence using (_⇔_)
 open import Function
 
-
+-- import Relation.Binary.PropositionalEquality as Eq
+-- open Eq using (_≡_; refl)
 
 open import NaturalDeduction
 
@@ -20,21 +21,12 @@ module Semantics where
   Valuation : ℕ → Set
   Valuation n = Fin n → ℕ
 
-
-  -- we want extended valuation for all and some semantics due to the cange in context
+  -- we want extended valuation for all and some semantics due to the change in context
   -- to use this in all and some semantics
   Ext-valuation : {n : ℕ} → Valuation n → ℕ → Valuation (suc n)
-  Ext-valuation η n = {! !}
+  Ext-valuation η zero = {!   !}
+  Ext-valuation η (suc x) = {!   !}
 
---   Ext-valuation η xs = Fin.suc xs → η xs
-  --(λ { Fin.zero → x; (Fin.suc xs) → η xs }
-
-  -- anonymous function
-  -- x as the free variable - when we interpet we 'gain' one variable
-  -- valuation works on all ℕ so when talking about suc xs we use valuation on all xs or all ℕ
-  --{!(λ { Fin.zero → x; (Fin.suc xs) → η xs }) !}
-
---   (λ { Fin.zero → x; (Fin.suc xs) → η xs })
 
   -- the meaning of an expression is a number
   -- ⟦ ⟧ dobimo z \[[ in \]]
@@ -62,12 +54,8 @@ module Semantics where
   ⟦ some φ ⟧ᶠ η = Σ[ x ∈ ℕ ] ⟦ φ ⟧ᶠ (λ { Fin.zero → x; (Fin.suc xs) → η xs }) -- not sure
   
                      -- Σ[ x ∈ A ] B x        A (λ x → B) 
-  ⟦ φ ≈ᵖ ψ ⟧ᶠ η = {!!}
-
-
-
-
-
+  ⟦ φ ≈ᵖ ψ ⟧ᶠ η = ⟦ {!   !} ⟧ᶠ η   
+  --  _≈ᵖ_ : Exp n → Exp n → Formula n
 
 
 
@@ -108,5 +96,14 @@ module Semantics where
   soundness Δ (≈-refl _ t) η H = {!!}
   soundness Δ (≈-subt _ P Q) η H = {!!}
   soundness Δ (≈-suc _ P) η H = {!!}
+  soundness Δ (all-intro _ x) η P = {!   !}
+  soundness Δ (some-intro _ x) η P = {!   !}
+  soundness Δ (some-elim _ x x₁) η P = {!   !}
+  soundness Δ (≈-sym _ x) η P = {!   !}
+  soundness Δ (≈-trans _ x x₁) η P = {!   !}
+  soundness Δ (≈-sum _) η P = {!   !}
+  soundness Δ (≈-sumsuc _) η P = {!   !}
+  soundness Δ (≈-prod _) η P = {!   !}
+  soundness Δ (≈-prodsum _) η P = {!   !}
  
  

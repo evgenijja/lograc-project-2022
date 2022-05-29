@@ -80,6 +80,8 @@ shift-Exp (sucᴾ t) = sucᴾ (shift-Exp t)
 shift-Exp (s +ᴾ t) = shift-Exp s +ᴾ shift-Exp t
 shift-Exp (s *ᴾ t) = shift-Exp s *ᴾ shift-Exp t
 
+
+
 shift : {n m : ℕ} → Sub n m → Sub (suc n) (suc m)
 shift σ Fin.zero = var Fin.zero
 shift σ (Fin.suc x) = shift-Exp (σ x)
@@ -88,25 +90,24 @@ subst-Formula : {n m : ℕ} → Sub n m → Formula n → Formula m
 subst-Formula σ ⊤ᵖ = ⊤ᵖ
 subst-Formula σ ⊥ᵖ = ⊥ᵖ
 subst-Formula σ (Ψ ∧ᵖ Θ) = subst-Formula σ Ψ ∧ᵖ subst-Formula σ Θ
-subst-Formula σ (Ψ ∨ᵖ Θ) = {!!}
-subst-Formula σ (Ψ ⇒ᵖ Θ) = {!!}
-subst-Formula σ (all Ψ) = {!!}
+subst-Formula σ (Ψ ∨ᵖ Θ) = subst-Formula σ Ψ ∨ᵖ subst-Formula σ Θ -- a
+subst-Formula σ (Ψ ⇒ᵖ Θ) = subst-Formula σ Ψ ⇒ᵖ subst-Formula σ Θ -- a
+subst-Formula σ (all Ψ) = all (subst-Formula (shift σ) Ψ) -- a - enako kot some?
 subst-Formula σ (some Ψ) = some (subst-Formula (shift σ) Ψ)
 subst-Formula σ (s ≈ᵖ t) = (subst-Exp σ s ≈ᵖ subst-Exp σ t)
+
 
 -- substitute var 0 with the given term
 subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
 subst₀ t Fin.zero = t
-subst₀ t (Fin.suc x) = var x
+subst₀ t (Fin.suc x) = var x -- var has type Fin n → Exp n similarly as substitution
 
-{-
-   Hypotheses are represented as a list of formulae.
--}
 
+
+-- Hypotheses are represented as a list of formulae.
 -- hypotheses also need context of n variables
 Hypotheses : ℕ → Set
 Hypotheses n = List (Formula n)
-
 
 {-
    We use constructor instances when defining the formula-in-hypotheses
@@ -129,6 +130,7 @@ data _∈_ {A : Set} : A → List A → Set where
 
 infixl 2 _,_⊢_
 data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set where    -- unicode \vdash
+
 
   -- hypotheses
 
@@ -223,13 +225,28 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 -- subst₀ t Fin.zero = t
 -- subst₀ t (Fin.suc x) = var x
 
---   all-intro 
+  all-intro : (n : ℕ) → {Δ : Hypotheses n} -- a
+           → {φ : Formula n} -- x not in freevariables(Δ)
+           → {t : Exp n}
+           → n , Δ  ⊢ φ -- iz contexta n spremenljivk in hipotez v n spremenljivkah lahko pridemo do φ v n spremenjljivkah
+         --------------------------
+           → n , Δ ⊢ all {!!} -- TODO
 
---   some-intro
 
---   some-elim
+  some-intro : (n : ℕ) → {Δ : Hypotheses n} -- a
+            → {φ : Formula (suc n)}
+            → {t : Exp n}
+            → n , Δ ⊢ subst-Formula (subst₀ t) φ  -- φ[t/y]
+            -------------------------------------
+            → n , Δ ⊢ some φ
 
---  ≈-intro in elim ????
+  some-elim : (n : ℕ) → {Δ : Hypotheses n} -- a
+            → {φ ψ : Formula n}
+            → n , Δ ⊢ {! !} -- TODO
+            → n , Δ ++ [ φ ] ⊢ ψ
+            -----------------------
+            → n , Δ ⊢ ψ
+
 
   -- equality
 
@@ -238,7 +255,6 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          -------------
          → n , Δ ⊢ t ≈ᵖ t
 
--- tukej mankata 2 izpeljave http://www.andrej.com/zapiski/ISRM-LOGRAC-2022/05-logic.lagda.html
 
   ≈-subt : (n : ℕ) → {Δ : Hypotheses n}
          → {φ : Formula (suc n)}
@@ -248,15 +264,71 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          -----------------------
          → n , Δ ⊢ subst-Formula (subst₀ u) φ
 
+  ≈-sym : (n : ℕ) → {Δ : Hypotheses n}
+         → {t u : Exp n}
+         → n , Δ ⊢ t ≈ᵖ u 
+         -----------------
+         → n , Δ ⊢ u ≈ᵖ t
+
+  ≈-trans : (n : ℕ) → {Δ : Hypotheses n}
+         → {t u s : Exp n}
+         → n , Δ ⊢ s ≈ᵖ t 
+         → n , Δ ⊢ t ≈ᵖ u 
+         -----------------
+         → n , Δ ⊢ s ≈ᵖ u 
+
   -- Peano axioms
 
+  -- katere izpeljave manjkajo glej: http://www.andrej.com/zapiski/ISRM-LOGRAC-2022/05-logic.lagda.html
+
+
+  -- prvi : no succesor is equal to zero
+--   ≈-zero : (n : ℕ) → {Δ : Hypotheses n}
+--          → {t : Exp n}
+--          → TODO
+
+
+  -- drugi
   ≈-suc : (n : ℕ) → {Δ : Hypotheses n}
         → {t u : Exp n}
         → n , Δ ⊢ sucᴾ t ≈ᵖ sucᴾ u
         -----------------------
         → n , Δ ⊢ t ≈ᵖ u
+  
+  -- tretji
+  ≈-sum : (n : ℕ) → {Δ : Hypotheses n}
+         → {u : Exp n}
+         ------------------------
+         → n , Δ ⊢ (zeroᴾ +ᴾ u) ≈ᵖ u 
 
--- manka 5 "lahkih" in 1 zelo tezek
+  -- četrti
+  ≈-sumsuc : (n : ℕ) → {Δ : Hypotheses n}
+         → {t u : Exp n}
+         ------------------------------------
+         → n , Δ ⊢ ((sucᴾ t) +ᴾ u) ≈ᵖ sucᴾ (t +ᴾ u)
+
+   -- peti 
+  ≈-prod : (n : ℕ) → {Δ : Hypotheses n}
+         → {u : Exp n}
+         ---------------
+         → n , Δ ⊢ (zeroᴾ *ᴾ u) ≈ᵖ zeroᴾ
+
+  -- šesti
+  ≈-prodsum : (n : ℕ) → {Δ : Hypotheses n}
+         → {t u : Exp n}
+         ------------------
+         → n , Δ ⊢ ((sucᴾ t) *ᴾ u) ≈ᵖ (u +ᴾ (t *ᴾ u))
+
+  -- sedmi
+--   ≈-induc : (n : ℕ) → {Δ : Hypotheses n}
+--          → {φ : Formula (suc n)}
+--          → {y z t : Exp n}
+--          → n , Δ ⊢ subst-Formula (subst₀ zero) φ -- TODO 
+
+
+-- subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
+-- subst₀ t Fin.zero = t
+-- subst₀ t (Fin.suc x) = var x
 
 
 

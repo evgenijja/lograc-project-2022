@@ -225,12 +225,11 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 -- subst₀ t Fin.zero = t
 -- subst₀ t (Fin.suc x) = var x
 
-  all-intro : (n : ℕ) → {Δ : Hypotheses n} -- a
-           → {φ : Formula n} -- x not in freevariables(Δ)
-           → {t : Exp n}
-           → n , Δ  ⊢ φ -- iz contexta n spremenljivk in hipotez v n spremenljivkah lahko pridemo do φ v n spremenjljivkah
+  all-intro : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
+           → {φ : Formula (suc n)} -- x not in freevariables(Δ)
+          -- iz contexta n spremenljivk in hipotez v n spremenljivkah lahko pridemo do φ v n spremenjljivkah
          --------------------------
-           → n , Δ ⊢ all {!!} -- TODO
+           → n , Δ ⊢ all φ -- TODO
 
 
   some-intro : (n : ℕ) → {Δ : Hypotheses n} -- a
@@ -240,10 +239,11 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
             -------------------------------------
             → n , Δ ⊢ some φ
 
-  some-elim : (n : ℕ) → {Δ : Hypotheses n} -- a
-            → {φ ψ : Formula n}
-            → n , Δ ⊢ {! !} -- TODO
-            → n , Δ ++ [ φ ] ⊢ ψ
+  some-elim : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
+            → {φ : Formula (suc n)}
+            → {ψ : Formula n}
+            → n , Δ ⊢ some φ
+            → n , Δ ++ [ some φ ] ⊢ ψ
             -----------------------
             → n , Δ ⊢ ψ
 
@@ -283,9 +283,10 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
 
   -- prvi : no succesor is equal to zero
---   ≈-zero : (n : ℕ) → {Δ : Hypotheses n}
---          → {t : Exp n}
---          → TODO
+  ≈-zero : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
+        → {t : Exp n}
+        -----------------------
+        →  n , Δ ++ [ sucᴾ t ≈ᵖ zeroᴾ ] ⊢ ⊥ᵖ
 
 
   -- drugi
@@ -320,10 +321,13 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          → n , Δ ⊢ ((sucᴾ t) *ᴾ u) ≈ᵖ (u +ᴾ (t *ᴾ u))
 
   -- sedmi
---   ≈-induc : (n : ℕ) → {Δ : Hypotheses n}
---          → {φ : Formula (suc n)}
---          → {y z t : Exp n}
---          → n , Δ ⊢ subst-Formula (subst₀ zero) φ -- TODO 
+  ≈-induc : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
+         → {φ : Formula (suc n)}
+         → {y t : Exp n}
+         → n , Δ ⊢ subst-Formula (subst₀ zeroᴾ) φ
+         → n , Δ ++ [ subst-Formula (subst₀ y) φ ]  ⊢ subst-Formula (subst₀ (sucᴾ y)) φ
+         -------------------
+         → n , Δ ⊢ subst-Formula (subst₀ t) φ
 
 
 -- subst₀ : {n : ℕ} → Exp n → Sub (suc n) n

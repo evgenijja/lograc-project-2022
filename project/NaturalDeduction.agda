@@ -80,7 +80,8 @@ shift-Exp (sucᴾ t) = sucᴾ (shift-Exp t)
 shift-Exp (s +ᴾ t) = shift-Exp s +ᴾ shift-Exp t
 shift-Exp (s *ᴾ t) = shift-Exp s *ᴾ shift-Exp t
 
-
+shift-Formula : {n : ℕ} → Formula n → Formula (suc n)
+shift-Formula = {!!}
 
 shift : {n m : ℕ} → Sub n m → Sub (suc n) (suc m)
 shift σ Fin.zero = var Fin.zero
@@ -97,12 +98,15 @@ subst-Formula σ (some Ψ) = some (subst-Formula (shift σ) Ψ)
 subst-Formula σ (s ≈ᵖ t) = (subst-Exp σ s ≈ᵖ subst-Exp σ t)
 
 
--- substitute var 0 with the given term
+-- substitute var 0 with the given term in one fewer variables
 subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
 subst₀ t Fin.zero = t
 subst₀ t (Fin.suc x) = var x -- var has type Fin n → Exp n similarly as substitution
 
-
+-- substitute var 0 with the given term in the same number of variables
+subst'₀ : {n : ℕ} → Exp (suc n) → Sub (suc n) (suc n)
+subst'₀ t Fin.zero = t
+subst'₀ t (Fin.suc x) = var (Fin.suc x)
 
 -- Hypotheses are represented as a list of formulae.
 -- hypotheses also need context of n variables
@@ -128,6 +132,11 @@ data _∈_ {A : Set} : A → List A → Set where
   ∈-here  : {x : A} → {xs : List A} → x ∈ (x ∷ xs)
   ∈-there : {x y : A} {xs : List A} → {{x ∈ xs}} → x ∈ (y ∷ xs)
 
+
+shift-Hypos : {n : ℕ} → Hypotheses n → Hypotheses (suc n)
+shift-Hypos = {!!}
+
+
 infixl 2 _,_⊢_
 data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set where    -- unicode \vdash
 
@@ -142,7 +151,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- truth
 
-  ⊤-intro  : (n : ℕ) → {Δ : Hypotheses n}
+  ⊤-intro  : {n : ℕ} → {Δ : Hypotheses n}
            ------------------
            → n , Δ ⊢ ⊤ᵖ
 
@@ -189,7 +198,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
            -------------------
            → n , Δ ⊢ φ ∨ᵖ ψ
 
-  ∨-elim   : (n : ℕ) → {Δ : Hypotheses n}
+  ∨-elim   : {n : ℕ} → {Δ : Hypotheses n}
            → {φ₁ φ₂ ψ : Formula n}
            → n , Δ ⊢ φ₁ ∨ᵖ φ₂
            → n , Δ ++ [ φ₁ ] ⊢ ψ
@@ -214,10 +223,10 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- universal quantifier
 
-  all-elim : (n : ℕ) → {Δ : Hypotheses n}
+  all-elim : {n : ℕ} → {Δ : Hypotheses n}
           → {φ : Formula (suc n)}
           → (t : Exp n)
-          → n , Δ ⊢ all φ 
+          → n , Δ ⊢ all φ
           -----------------
           → n , Δ ⊢ subst-Formula (subst₀ t) φ
 
@@ -225,25 +234,25 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 -- subst₀ t Fin.zero = t
 -- subst₀ t (Fin.suc x) = var x
 
-  all-intro : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
+  all-intro : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
            → {φ : Formula (suc n)} -- x not in freevariables(Δ)
-          -- iz contexta n spremenljivk in hipotez v n spremenljivkah lahko pridemo do φ v n spremenjljivkah
+           → suc n , shift-Hypos Δ ⊢ φ
          --------------------------
            → n , Δ ⊢ all φ -- TODO
 
 
-  some-intro : (n : ℕ) → {Δ : Hypotheses n} -- a
+  some-intro : {n : ℕ} → {Δ : Hypotheses n} -- a
             → {φ : Formula (suc n)}
-            → {t : Exp n}
+            → (t : Exp n)
             → n , Δ ⊢ subst-Formula (subst₀ t) φ  -- φ[t/y]
             -------------------------------------
             → n , Δ ⊢ some φ
 
-  some-elim : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
+  some-elim : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
             → {φ : Formula (suc n)}
             → {ψ : Formula n}
             → n , Δ ⊢ some φ
-            → n , Δ ++ [ some φ ] ⊢ ψ
+            → suc n , shift-Hypos Δ ++ [ φ ] ⊢ shift-Formula ψ
             -----------------------
             → n , Δ ⊢ ψ
 
@@ -266,16 +275,16 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   ≈-sym : (n : ℕ) → {Δ : Hypotheses n}
          → {t u : Exp n}
-         → n , Δ ⊢ t ≈ᵖ u 
+         → n , Δ ⊢ t ≈ᵖ u
          -----------------
          → n , Δ ⊢ u ≈ᵖ t
 
   ≈-trans : (n : ℕ) → {Δ : Hypotheses n}
          → {t u s : Exp n}
-         → n , Δ ⊢ s ≈ᵖ t 
-         → n , Δ ⊢ t ≈ᵖ u 
+         → n , Δ ⊢ s ≈ᵖ t
+         → n , Δ ⊢ t ≈ᵖ u
          -----------------
-         → n , Δ ⊢ s ≈ᵖ u 
+         → n , Δ ⊢ s ≈ᵖ u
 
   -- Peano axioms
 
@@ -283,24 +292,24 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
 
   -- prvi : no succesor is equal to zero
-  ≈-zero : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
-        → {t : Exp n}
-        -----------------------
-        →  n , Δ ++ [ sucᴾ t ≈ᵖ zeroᴾ ] ⊢ ⊥ᵖ
+  ≈-zero : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
+         → {t : Exp n}
+         -----------------------
+         →  n , Δ ++ [ sucᴾ t ≈ᵖ zeroᴾ ] ⊢ ⊥ᵖ
 
 
   -- drugi
-  ≈-suc : (n : ℕ) → {Δ : Hypotheses n}
+  ≈-suc : {n : ℕ} → {Δ : Hypotheses n}
         → {t u : Exp n}
         → n , Δ ⊢ sucᴾ t ≈ᵖ sucᴾ u
         -----------------------
         → n , Δ ⊢ t ≈ᵖ u
-  
+
   -- tretji
   ≈-sum : (n : ℕ) → {Δ : Hypotheses n}
          → {u : Exp n}
          ------------------------
-         → n , Δ ⊢ (zeroᴾ +ᴾ u) ≈ᵖ u 
+         → n , Δ ⊢ (zeroᴾ +ᴾ u) ≈ᵖ u
 
   -- četrti
   ≈-sumsuc : (n : ℕ) → {Δ : Hypotheses n}
@@ -308,7 +317,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          ------------------------------------
          → n , Δ ⊢ ((sucᴾ t) +ᴾ u) ≈ᵖ sucᴾ (t +ᴾ u)
 
-   -- peti 
+   -- peti
   ≈-prod : (n : ℕ) → {Δ : Hypotheses n}
          → {u : Exp n}
          ---------------
@@ -321,11 +330,11 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          → n , Δ ⊢ ((sucᴾ t) *ᴾ u) ≈ᵖ (u +ᴾ (t *ᴾ u))
 
   -- sedmi
-  ≈-induc : (n : ℕ) → {Δ : Hypotheses n} -- govorilna
+  ≈-induc : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
          → {φ : Formula (suc n)}
-         → {y t : Exp n}
+         → (t : Exp n)
          → n , Δ ⊢ subst-Formula (subst₀ zeroᴾ) φ
-         → n , Δ ++ [ subst-Formula (subst₀ y) φ ]  ⊢ subst-Formula (subst₀ (sucᴾ y)) φ
+         → suc n , shift-Hypos Δ ++ [ φ ]  ⊢ subst-Formula (subst'₀ (sucᴾ (var Fin.zero))) φ
          -------------------
          → n , Δ ⊢ subst-Formula (subst₀ t) φ
 
@@ -333,13 +342,3 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 -- subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
 -- subst₀ t Fin.zero = t
 -- subst₀ t (Fin.suc x) = var x
-
-
-
-
-
-
-
-
-
-

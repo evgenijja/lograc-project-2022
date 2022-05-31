@@ -81,7 +81,14 @@ shift-Exp (s +ᴾ t) = shift-Exp s +ᴾ shift-Exp t
 shift-Exp (s *ᴾ t) = shift-Exp s *ᴾ shift-Exp t
 
 shift-Formula : {n : ℕ} → Formula n → Formula (suc n)
-shift-Formula = {!!}
+shift-Formula ⊤ᵖ = ⊤ᵖ
+shift-Formula ⊥ᵖ = ⊥ᵖ
+shift-Formula (Ψ ∧ᵖ Θ) = (shift-Formula Ψ) ∧ᵖ (shift-Formula Θ)
+shift-Formula (Ψ ∨ᵖ Θ) = (shift-Formula Ψ) ∨ᵖ (shift-Formula Θ)
+shift-Formula (Ψ ⇒ᵖ Θ) = (shift-Formula Ψ) ⇒ᵖ (shift-Formula Θ)
+shift-Formula (all Ψ) = all (shift-Formula Ψ)
+shift-Formula (some Ψ) = some (shift-Formula Ψ)
+shift-Formula (t ≈ᵖ u) = {! (shift-Exp t) ≈ᵖ (shift-Exp u) !}
 
 shift : {n m : ℕ} → Sub n m → Sub (suc n) (suc m)
 shift σ Fin.zero = var Fin.zero
@@ -134,7 +141,8 @@ data _∈_ {A : Set} : A → List A → Set where
 
 
 shift-Hypos : {n : ℕ} → Hypotheses n → Hypotheses (suc n)
-shift-Hypos = {!!}
+shift-Hypos [] = []
+shift-Hypos (x ∷ Δ) = (shift-Formula x) ∷ shift-Hypos Δ
 
 
 infixl 2 _,_⊢_
@@ -292,45 +300,45 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
 
   -- prvi : no succesor is equal to zero
-  ≈-zero : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
+  p-zero : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
          → {t : Exp n}
          -----------------------
          →  n , Δ ++ [ sucᴾ t ≈ᵖ zeroᴾ ] ⊢ ⊥ᵖ
 
 
   -- drugi
-  ≈-suc : {n : ℕ} → {Δ : Hypotheses n}
+  p-suc : {n : ℕ} → {Δ : Hypotheses n}
         → {t u : Exp n}
         → n , Δ ⊢ sucᴾ t ≈ᵖ sucᴾ u
         -----------------------
         → n , Δ ⊢ t ≈ᵖ u
 
   -- tretji
-  ≈-sum : (n : ℕ) → {Δ : Hypotheses n}
+  p-sum : (n : ℕ) → {Δ : Hypotheses n}
          → {u : Exp n}
          ------------------------
          → n , Δ ⊢ (zeroᴾ +ᴾ u) ≈ᵖ u
 
   -- četrti
-  ≈-sumsuc : (n : ℕ) → {Δ : Hypotheses n}
+  p-sumsuc : (n : ℕ) → {Δ : Hypotheses n}
          → {t u : Exp n}
          ------------------------------------
          → n , Δ ⊢ ((sucᴾ t) +ᴾ u) ≈ᵖ sucᴾ (t +ᴾ u)
 
    -- peti
-  ≈-prod : (n : ℕ) → {Δ : Hypotheses n}
+  p-prod : (n : ℕ) → {Δ : Hypotheses n}
          → {u : Exp n}
          ---------------
          → n , Δ ⊢ (zeroᴾ *ᴾ u) ≈ᵖ zeroᴾ
 
   -- šesti
-  ≈-prodsum : (n : ℕ) → {Δ : Hypotheses n}
+  p-prodsum : (n : ℕ) → {Δ : Hypotheses n}
          → {t u : Exp n}
          ------------------
          → n , Δ ⊢ ((sucᴾ t) *ᴾ u) ≈ᵖ (u +ᴾ (t *ᴾ u))
 
   -- sedmi
-  ≈-induc : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
+  p-induc : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
          → {φ : Formula (suc n)}
          → (t : Exp n)
          → n , Δ ⊢ subst-Formula (subst₀ zeroᴾ) φ

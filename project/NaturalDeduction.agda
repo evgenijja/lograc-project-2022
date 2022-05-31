@@ -88,7 +88,7 @@ shift-Formula (Ψ ∨ᵖ Θ) = (shift-Formula Ψ) ∨ᵖ (shift-Formula Θ)
 shift-Formula (Ψ ⇒ᵖ Θ) = (shift-Formula Ψ) ⇒ᵖ (shift-Formula Θ)
 shift-Formula (all Ψ) = all (shift-Formula Ψ)
 shift-Formula (some Ψ) = some (shift-Formula Ψ)
-shift-Formula (t ≈ᵖ u) = {! (shift-Exp t) ≈ᵖ (shift-Exp u) !}
+shift-Formula (t ≈ᵖ u) = (shift-Exp t) ≈ᵖ (shift-Exp u)
 
 shift : {n m : ℕ} → Sub n m → Sub (suc n) (suc m)
 shift σ Fin.zero = var Fin.zero
@@ -151,7 +151,7 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- hypotheses
 
-  hyp      : (n : ℕ) → {Δ : Hypotheses n}
+  hyp      : {n : ℕ} → {Δ : Hypotheses n}
            → (φ : Formula n)
            → (φ ∈ Δ)
            -----------------
@@ -159,13 +159,13 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- truth
 
-  ⊤-intro  : {n : ℕ} → {Δ : Hypotheses n}
+  ⊤ᵖ-intro  : {n : ℕ} → {Δ : Hypotheses n}
            ------------------
            → n , Δ ⊢ ⊤ᵖ
 
   -- falsehood
 
-  ⊥ᵖ-elim   : (n : ℕ) → {Δ : Hypotheses n}
+  ⊥ᵖ-elim   : {n : ℕ} → {Δ : Hypotheses n}
            → {φ : Formula n}
            → n , Δ ⊢ ⊥ᵖ
            -------------------
@@ -173,20 +173,20 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- conjunction
 
-  ∧-intro  : (n : ℕ) → {Δ : Hypotheses n}
+  ∧-intro  : {n : ℕ} → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ φ
            → n , Δ ⊢ ψ
            -------------------
            → n , Δ ⊢ φ ∧ᵖ ψ
 
-  ∧-elim₁  : (n : ℕ) → {Δ : Hypotheses n}
+  ∧-elim₁  : {n : ℕ} → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ φ ∧ᵖ ψ
            -------------------
            → n , Δ ⊢ φ
 
-  ∧-elim₂  : (n : ℕ) → {Δ : Hypotheses n}
+  ∧-elim₂  : {n : ℕ} → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ φ ∧ᵖ ψ
            -------------------
@@ -194,13 +194,13 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- disjunction
 
-  ∨-intro₁ : (n : ℕ) → {Δ : Hypotheses n}
+  ∨-intro₁ : {n : ℕ} → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ φ
            ------------------
            → n , Δ ⊢ φ ∨ᵖ ψ
 
-  ∨-intro₂ : (n : ℕ) → {Δ : Hypotheses n}
+  ∨-intro₂ : {n : ℕ} → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ ψ
            -------------------
@@ -216,13 +216,13 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- implication
 
-  ⇒-intro  : (n : ℕ) → {Δ : Hypotheses n}
+  ⇒-intro  : {n : ℕ} → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ++ [ φ ] ⊢ ψ
            --------------------
            → n , Δ ⊢ φ ⇒ᵖ ψ
 
-  ⇒-elim   : (n : ℕ) → {Δ : Hypotheses n}
+  ⇒-elim   : {n : ℕ} → {Δ : Hypotheses n}
            → {φ ψ : Formula n}
            → n , Δ ⊢ φ ⇒ᵖ ψ
            → n , Δ ⊢ φ
@@ -267,13 +267,13 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- equality
 
-  ≈-refl : (n : ℕ) → {Δ : Hypotheses n}
+  ≈-refl : {n : ℕ} → {Δ : Hypotheses n}
          → (t : Exp n)
          -------------
          → n , Δ ⊢ t ≈ᵖ t
 
 
-  ≈-subt : (n : ℕ) → {Δ : Hypotheses n}
+  ≈-subt : {n : ℕ} → {Δ : Hypotheses n}
          → {φ : Formula (suc n)}
          → {t u : Exp n}
          → n , Δ ⊢ subst-Formula (subst₀ t) φ
@@ -281,13 +281,13 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          -----------------------
          → n , Δ ⊢ subst-Formula (subst₀ u) φ
 
-  ≈-sym : (n : ℕ) → {Δ : Hypotheses n}
+  ≈-sym : {n : ℕ} → {Δ : Hypotheses n}
          → {t u : Exp n}
          → n , Δ ⊢ t ≈ᵖ u
          -----------------
          → n , Δ ⊢ u ≈ᵖ t
 
-  ≈-trans : (n : ℕ) → {Δ : Hypotheses n}
+  ≈-trans : {n : ℕ} → {Δ : Hypotheses n}
          → {t u s : Exp n}
          → n , Δ ⊢ s ≈ᵖ t
          → n , Δ ⊢ t ≈ᵖ u
@@ -314,25 +314,25 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
         → n , Δ ⊢ t ≈ᵖ u
 
   -- tretji
-  p-sum : (n : ℕ) → {Δ : Hypotheses n}
+  p-sum : {n : ℕ} → {Δ : Hypotheses n}
          → {u : Exp n}
          ------------------------
          → n , Δ ⊢ (zeroᴾ +ᴾ u) ≈ᵖ u
 
   -- četrti
-  p-sumsuc : (n : ℕ) → {Δ : Hypotheses n}
+  p-sumsuc : {n : ℕ} → {Δ : Hypotheses n}
          → {t u : Exp n}
          ------------------------------------
          → n , Δ ⊢ ((sucᴾ t) +ᴾ u) ≈ᵖ sucᴾ (t +ᴾ u)
 
    -- peti
-  p-prod : (n : ℕ) → {Δ : Hypotheses n}
+  p-prod : {n : ℕ} → {Δ : Hypotheses n}
          → {u : Exp n}
          ---------------
          → n , Δ ⊢ (zeroᴾ *ᴾ u) ≈ᵖ zeroᴾ
 
   -- šesti
-  p-prodsum : (n : ℕ) → {Δ : Hypotheses n}
+  p-prodsum : {n : ℕ} → {Δ : Hypotheses n}
          → {t u : Exp n}
          ------------------
          → n , Δ ⊢ ((sucᴾ t) *ᴾ u) ≈ᵖ (u +ᴾ (t *ᴾ u))

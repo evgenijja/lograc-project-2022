@@ -94,30 +94,30 @@ module Semantics where
 
 
   -- hypotheses 
-  soundness Δ (hyp _ φ x) η H = {!!}
+  soundness Δ (hyp φ x) η H = {!!}
 
 
   -- booleans
-  soundness Δ ⊤-intro η H = tt
-  soundness Δ (⊥ᵖ-elim _ P) η H = ⊥-elim (soundness Δ P η H)
+  soundness Δ ⊤ᵖ-intro η H = tt
+  soundness Δ (⊥ᵖ-elim P) η H = ⊥-elim (soundness Δ P η H)
   --⊥-elim : ∀ {w} {Whatever : Set w} → ⊥ → Whatever 
 
 
   -- conjunction                          
-  soundness Δ (∧-intro _ P Q) η H = (soundness Δ P η H) , (soundness Δ Q η H)
-  soundness Δ (∧-elim₁ _ P) η H = proj₁ (soundness Δ P η H)
-  soundness Δ (∧-elim₂ _ P) η H = proj₂ (soundness Δ P η H)
+  soundness Δ (∧-intro P Q) η H = (soundness Δ P η H) , (soundness Δ Q η H)
+  soundness Δ (∧-elim₁ P) η H = proj₁ (soundness Δ P η H)
+  soundness Δ (∧-elim₂ P) η H = proj₂ (soundness Δ P η H)
 
 
   -- disjunction
-  soundness Δ (∨-intro₁ _ P) η H = inj₁ (soundness Δ P η H) -- not sure
-  soundness Δ (∨-intro₂ _ P) η H = inj₂ (soundness Δ P η H)
+  soundness Δ (∨-intro₁ P) η H = inj₁ (soundness Δ P η H) -- not sure
+  soundness Δ (∨-intro₂ P) η H = inj₂ (soundness Δ P η H)
   soundness Δ (∨-elim {φ₁ = φ₁} {φ₂ = φ₂} P Q R) η H = [ (λ x →  soundness (Δ ++ φ₁ ∷ []) Q η (extend H x)) , ((λ x →  soundness (Δ ++ φ₂ ∷ []) R η (extend H x))) ]′ (soundness Δ P η H)
   
 
   -- implication
-  soundness Δ (⇒-intro _ φ ψ P) η H = {!!}
-  soundness Δ (⇒-elim _ P Q) η H = 
+  soundness Δ (⇒-intro P) η H = {!!}
+  soundness Δ (⇒-elim P Q) η H = 
       modus-ponens (soundness Δ P η H) (soundness Δ Q η H)
           where 
               modus-ponens : ∀ {A B : Set} → (A → B) → A → B
@@ -131,25 +131,25 @@ module Semantics where
   
   
   -- some
-  soundness Δ (some-intro _ x) η H = {!   !}
+  soundness Δ (some-intro x P) η H = {!   !}
   soundness Δ (some-elim x P) η H = {! soundness ? P ? ?!}
 
 
   -- equality
-  soundness Δ (≈-refl _ t) η H = refl -- surprisingly
-  soundness Δ (≈-subt _ P Q) η H = {!!}
-  soundness Δ (≈-sym _ P) η H = sym (soundness Δ P η H)
-  soundness Δ (≈-trans _ P Q) η H = trans (soundness Δ P η H) (soundness Δ Q η H)
+  soundness Δ (≈-refl t) η H = refl -- surprisingly
+  soundness Δ (≈-subt P Q) η H = {!!}
+  soundness Δ (≈-sym P) η H = sym (soundness Δ P η H)
+  soundness Δ (≈-trans P Q) η H = trans (soundness Δ P η H) (soundness Δ Q η H)
 
 
   -- peano 
-  soundness Δ ≈-zero η H = ⊥-elim _ -- goal: ⊥ 
-  soundness Δ (≈-suc P) η H = cong-suc (soundness Δ P η H)
+  soundness Δ p-zero η H = ⊥-elim _ -- goal: ⊥ 
+  soundness Δ (p-suc P) η H = cong-suc (soundness Δ P η H)
                                   where
                                       cong-suc : {x y : ℕ} → (suc x) ≡ (suc y) → x ≡ y
                                       cong-suc refl = refl 
-  soundness Δ (≈-sum _) η P = {! refl !}
-  soundness Δ (≈-sumsuc _) η P = {!   !}
-  soundness Δ (≈-prod _) η P = {!   !}
-  soundness Δ (≈-prodsum _) η P = {!   !}
-  soundness Δ (≈-induc x y z) η P = {!   !}
+  soundness Δ (p-sum) η P = {!   !}
+  soundness Δ p-sumsuc η P = {!   !}
+  soundness Δ p-prod η P = {!   !}
+  soundness Δ p-prodsum η P = {!   !}
+  soundness Δ (p-induc x y z) η P = {!   !}

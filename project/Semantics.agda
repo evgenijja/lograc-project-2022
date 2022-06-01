@@ -49,11 +49,11 @@ module Semantics where
   ⟦ φ ∨ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η ⊎ ⟦ ψ ⟧ᶠ η
   ⟦ φ ⇒ᵖ ψ ⟧ᶠ η = (⟦ φ ⟧ᶠ η) → (⟦ ψ ⟧ᶠ η)
 
-  ⟦ all φ ⟧ᶠ η =  (x : ℕ) → ⟦ φ ⟧ᶠ (Ext-valuation η x)
+  ⟦ ´∀ φ ⟧ᶠ η =  (x : ℕ) → ⟦ φ ⟧ᶠ (Ext-valuation η x)
   --(λ { Fin.zero → x; (Fin.suc xs) → η xs })
   -- this lambda is a valuation
 
-  ⟦ some φ ⟧ᶠ η = Σ[ x ∈ ℕ ] ⟦ φ ⟧ᶠ (Ext-valuation η x)
+  ⟦ ´∃ φ ⟧ᶠ η = Σ[ x ∈ ℕ ] ⟦ φ ⟧ᶠ (Ext-valuation η x)
                      -- Σ[ x ∈ A ] B x        A (λ x → B)
 
   ⟦ t ≈ᵖ u ⟧ᶠ η = ⟦ t ⟧ᵉ η ≡ ⟦ u ⟧ᵉ η
@@ -67,8 +67,8 @@ module Semantics where
   -- project a hypothesis
   proj-hypothesis : {n : ℕ} {Δ : Hypotheses n} {η : Valuation n} {φ : Formula n} →
                     ⟦ Δ ⟧ʰ η → φ ∈ Δ → ⟦ φ ⟧ᶠ η
-  proj-hypothesis H ∈-here = {!!}
-  proj-hypothesis H ∈-there = {!!}
+  proj-hypothesis H ∈-here = proj₁ H
+  proj-hypothesis {Δ = x::xs} H ∈-there = {!proj₂ H  !}
 
   shift-formula : {n k : ℕ} {φ : Formula n} {η : Valuation n} → ⟦ φ ⟧ᶠ η → ⟦ shift-Formula φ ⟧ᶠ (Ext-valuation η k)
   shift-formula {φ = ⊤ᵖ} p = tt
@@ -76,8 +76,8 @@ module Semantics where
   shift-formula {φ = φ ∨ᵖ φ₁} (inj₁ p) = {!!}
   shift-formula {φ = φ ∨ᵖ φ₁} (inj₂ p) = {!!}
   shift-formula {φ = φ ⇒ᵖ φ₁} p = λ x → {!!}
-  shift-formula {φ = all φ} p = {!!}
-  shift-formula {φ = some φ} (k , p) = k , {!!}
+  shift-formula {φ = ´∀ φ} p = {!!}
+  shift-formula {φ = ´∃ φ} (k , p) = k , {!!}
   shift-formula {φ = x ≈ᵖ x₁} p = {!p!}
 
   shift-hypotheses : {n k : ℕ} {Δ : Hypotheses n} {η : Valuation n} → ⟦ Δ ⟧ʰ η → ⟦ shift-Hypos Δ ⟧ʰ (Ext-valuation η k)
@@ -156,15 +156,15 @@ module Semantics where
               -- prepisan →-elim iz https://plfa.github.io/Connectives/
 
 
-  -- all
-  soundness Δ (all-elim t P) η H = {!!} -- for all prod and sigmas
-  soundness Δ (all-intro x) η H = {!   !}
+  -- ´∀
+  soundness Δ (´∀-elim t P) η H = {!!} -- for ´∀ prod and sigmas
+  soundness Δ (´∀-intro x) η H = {!   !}
 
 
-  -- some
-  soundness Δ (some-intro x P) η H = {!   !}
+  -- ´∃
+  soundness Δ (´∃-intro x P) η H = {!   !}
 
-  soundness Δ (some-elim {n = n} {φ = φ} {ψ = ψ} P Q) η H = unshift-formula (soundness _ Q (Ext-valuation η a) H')
+  soundness Δ (´∃-elim {n = n} {φ = φ} {ψ = ψ} P Q) η H = unshift-formula (soundness _ Q (Ext-valuation η a) H')
     where
       a : ℕ
       a = proj₁ (soundness Δ P η H)

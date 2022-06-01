@@ -26,7 +26,7 @@ The language of a first-order theory is described by a signature, which consists
    - terms : expressions that denote the objects we are talking about (zero, suc..)
    - formulas : they denote the truth values
 
-   They are ´∀ given a context of variables represented by the number of variables (that are not named)
+   They are ∀ᵖ given a context of variables represented by the number of variables (that are not named)
 -}
 
 data Exp (n : ℕ) : Set where
@@ -43,8 +43,8 @@ data Formula (n : ℕ) : Set where
   _∧ᵖ_ : Formula n → Formula n → Formula n              -- conjunction (unicode \wedge)
   _∨ᵖ_ : Formula n → Formula n → Formula n              -- disjunction (unicode \vee)
   _⇒ᵖ_ : Formula n → Formula n → Formula n              -- implication (unicode \=>)
-  ´∀_ : Formula (suc n) → Formula n                    -- for ´∀ \for´∀\for´∀
-  ´∃_ : Formula (suc n) → Formula n                   -- exists \exists
+  ∀ᵖ_ : Formula (suc n) → Formula n                    -- for ∀ᵖ \for∀ᵖ\for∀ᵖ
+  ∃ᵖ_ : Formula (suc n) → Formula n                   -- exists \exists
   _≈ᵖ_ : Exp n → Exp n → Formula n                      -- ≈ᵖ is \approx
 
 
@@ -52,8 +52,8 @@ infixr 6 _∧ᵖ_
 infixr 5 _∨ᵖ_
 infixr 4 _⇒ᵖ_
 
-infix 3 ´∀_
-infix 3 ´∃_
+infix 3 ∀ᵖ_
+infix 3 ∃ᵖ_
 
 {- 
 Substitutions
@@ -92,8 +92,8 @@ shift-Formula ⊥ᵖ = ⊥ᵖ
 shift-Formula (Ψ ∧ᵖ Θ) = (shift-Formula Ψ) ∧ᵖ (shift-Formula Θ)
 shift-Formula (Ψ ∨ᵖ Θ) = (shift-Formula Ψ) ∨ᵖ (shift-Formula Θ)
 shift-Formula (Ψ ⇒ᵖ Θ) = (shift-Formula Ψ) ⇒ᵖ (shift-Formula Θ)
-shift-Formula (´∀ Ψ) = ´∀ (shift-Formula Ψ)
-shift-Formula (´∃ Ψ) = ´∃ (shift-Formula Ψ)
+shift-Formula (∀ᵖ Ψ) = ∀ᵖ (shift-Formula Ψ)
+shift-Formula (∃ᵖ Ψ) = ∃ᵖ (shift-Formula Ψ)
 shift-Formula (t ≈ᵖ u) = (shift-Exp t) ≈ᵖ (shift-Exp u)
 
 -- Sub n m = Fin n → Exp m
@@ -107,8 +107,8 @@ subst-Formula σ ⊥ᵖ = ⊥ᵖ
 subst-Formula σ (Ψ ∧ᵖ Θ) = subst-Formula σ Ψ ∧ᵖ subst-Formula σ Θ
 subst-Formula σ (Ψ ∨ᵖ Θ) = subst-Formula σ Ψ ∨ᵖ subst-Formula σ Θ 
 subst-Formula σ (Ψ ⇒ᵖ Θ) = subst-Formula σ Ψ ⇒ᵖ subst-Formula σ Θ 
-subst-Formula σ (´∀ Ψ) = ´∀ (subst-Formula (shift σ) Ψ) 
-subst-Formula σ (´∃ Ψ) = ´∃ (subst-Formula (shift σ) Ψ)
+subst-Formula σ (∀ᵖ Ψ) = ∀ᵖ (subst-Formula (shift σ) Ψ) 
+subst-Formula σ (∃ᵖ Ψ) = ∃ᵖ (subst-Formula (shift σ) Ψ)
 subst-Formula σ (s ≈ᵖ t) = (subst-Exp σ s ≈ᵖ subst-Exp σ t)
 
 
@@ -149,7 +149,7 @@ data _∈_ {A : Set} : A → List A → Set where
   ∈-there : {x y : A} {xs : List A} → {{x ∈ xs}} → x ∈ (y ∷ xs)
 
 
--- shift ´∀ the formulas in hypotheses from Formula n to Formula suc n
+-- shift ∀ᵖ the formulas in hypotheses from Formula n to Formula suc n
 shift-Hypos : {n : ℕ} → Hypotheses n → Hypotheses (suc n)
 shift-Hypos [] = []
 shift-Hypos (x ∷ Δ) = (shift-Formula x) ∷ shift-Hypos Δ
@@ -243,32 +243,32 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- universal quantifier
 
-  ´∀-elim : {n : ℕ} → {Δ : Hypotheses n}
+  ∀ᵖ-elim : {n : ℕ} → {Δ : Hypotheses n}
           → {φ : Formula (suc n)}
           → (t : Exp n)
-          → n , Δ ⊢ ´∀ φ
+          → n , Δ ⊢ ∀ᵖ φ
           -----------------
           → n , Δ ⊢ subst-Formula (subst₀ t) φ  -- subst₀ t ≈ Sub (suc n) n 
 
 
-  ´∀-intro : {n : ℕ} → {Δ : Hypotheses n} 
+  ∀ᵖ-intro : {n : ℕ} → {Δ : Hypotheses n} 
            → {φ : Formula (suc n)} 
            → suc n , shift-Hypos Δ ⊢ φ
          --------------------------
-           → n , Δ ⊢ ´∀ φ
+           → n , Δ ⊢ ∀ᵖ φ
 
 
-  ´∃-intro : {n : ℕ} → {Δ : Hypotheses n} 
+  ∃ᵖ-intro : {n : ℕ} → {Δ : Hypotheses n} 
             → {φ : Formula (suc n)}
             → (t : Exp n)
             → n , Δ ⊢ subst-Formula (subst₀ t) φ  -- φ[t/y]
             -------------------------------------
-            → n , Δ ⊢ ´∃ φ
+            → n , Δ ⊢ ∃ᵖ φ
 
-  ´∃-elim : {n : ℕ} → {Δ : Hypotheses n} 
+  ∃ᵖ-elim : {n : ℕ} → {Δ : Hypotheses n} 
             → {φ : Formula (suc n)}
             → {ψ : Formula n}
-            → n , Δ ⊢ ´∃ φ
+            → n , Δ ⊢ ∃ᵖ φ
             → suc n , shift-Hypos Δ ++ [ φ ] ⊢ shift-Formula ψ
             -----------------------
             → n , Δ ⊢ ψ

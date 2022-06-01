@@ -49,11 +49,11 @@ module Semantics where
   ⟦ φ ∨ᵖ ψ ⟧ᶠ η = ⟦ φ ⟧ᶠ η ⊎ ⟦ ψ ⟧ᶠ η
   ⟦ φ ⇒ᵖ ψ ⟧ᶠ η = (⟦ φ ⟧ᶠ η) → (⟦ ψ ⟧ᶠ η)
 
-  ⟦ ´∀ φ ⟧ᶠ η =  (x : ℕ) → ⟦ φ ⟧ᶠ (Ext-valuation η x)
+  ⟦ ∀ᵖ φ ⟧ᶠ η =  (x : ℕ) → ⟦ φ ⟧ᶠ (Ext-valuation η x)
   --(λ { Fin.zero → x; (Fin.suc xs) → η xs })
   -- this lambda is a valuation
 
-  ⟦ ´∃ φ ⟧ᶠ η = Σ[ x ∈ ℕ ] ⟦ φ ⟧ᶠ (Ext-valuation η x)
+  ⟦ ∃ᵖ φ ⟧ᶠ η = Σ[ x ∈ ℕ ] ⟦ φ ⟧ᶠ (Ext-valuation η x)
                      -- Σ[ x ∈ A ] B x        A (λ x → B)
 
   ⟦ t ≈ᵖ u ⟧ᶠ η = ⟦ t ⟧ᵉ η ≡ ⟦ u ⟧ᵉ η
@@ -76,8 +76,8 @@ module Semantics where
   shift-formula {φ = φ ∨ᵖ φ₁} (inj₁ p) = {!!}
   shift-formula {φ = φ ∨ᵖ φ₁} (inj₂ p) = {!!}
   shift-formula {φ = φ ⇒ᵖ φ₁} p = λ x → {!!}
-  shift-formula {φ = ´∀ φ} p = {!!}
-  shift-formula {φ = ´∃ φ} (k , p) = k , {!!}
+  shift-formula {φ = ∀ᵖ φ} p = {!!}
+  shift-formula {φ = ∃ᵖ φ} (k , p) = k , {!!}
   shift-formula {φ = x ≈ᵖ x₁} p = {!p!}
 
   shift-hypotheses : {n k : ℕ} {Δ : Hypotheses n} {η : Valuation n} → ⟦ Δ ⟧ʰ η → ⟦ shift-Hypos Δ ⟧ʰ (Ext-valuation η k)
@@ -156,15 +156,15 @@ module Semantics where
               -- prepisan →-elim iz https://plfa.github.io/Connectives/
 
 
-  -- ´∀
-  soundness Δ (´∀-elim t P) η H = {!!} -- for ´∀ prod and sigmas
-  soundness Δ (´∀-intro x) η H = {!   !}
+  -- ∀ᵖ
+  soundness Δ (∀ᵖ-elim t P) η H = {!!} -- for ∀ᵖ prod and sigmas
+  soundness Δ (∀ᵖ-intro x) η H = {!   !}
 
 
-  -- ´∃
-  soundness Δ (´∃-intro x P) η H = {!   !}
+  -- ∃ᵖ
+  soundness Δ (∃ᵖ-intro x P) η H = {!   !}
 
-  soundness Δ (´∃-elim {n = n} {φ = φ} {ψ = ψ} P Q) η H = unshift-formula (soundness _ Q (Ext-valuation η a) H')
+  soundness Δ (∃ᵖ-elim {n = n} {φ = φ} {ψ = ψ} P Q) η H = unshift-formula (soundness _ Q (Ext-valuation η a) H')
     where
       a : ℕ
       a = proj₁ (soundness Δ P η H)

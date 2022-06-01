@@ -1,16 +1,3 @@
-
-{-
-   Allowing overlapping instances for `∈` to use in `hyp`.
-
-   Warning: If used carelessly, could lead to exponential
-   slowdown and looping behaviour during instance search.
--}
-
-{-
-   Notice that we parametrise the deeply embedded propositional logic
-   and its natural deduction proof system over a type of atomic formulaes.
--}
-
 -- TO POBRIŠI KO BO V TEJ DATOTEKI VSE NAREJENO
 {-# OPTIONS --allow-unsolved-metas #-}
 
@@ -20,6 +7,7 @@ module NaturalDeduction where
 open import Data.List  using (List; []; _∷_; [_]; _++_) public
 open import Data.Nat using (ℕ; zero; suc; _≤_; z≤n; s≤s)
 open import Data.Fin using (Fin)
+open import Data.Unit
 
 {-From lectures:
 
@@ -30,28 +18,34 @@ The language of a first-order theory is described by a signature, which consists
 
 {-
    Basis for formulae taken from lectures and exercises on propositional logic.
+   
+   Propositional logic consists of statements that can be given a truth value.
+   In predicate logic we introduce the concept of a variable and predicates which can have different # of variables. 
+
+   The main building blocks of predicate logic are 
+   - terms : expressions that denote the objects we are talking about (zero, suc..)
+   - formulas : they denote the truth values
+
+   They are all given a context of variables represented by the number of variables (that are not named)
 -}
 
--- expressions and formulaes have to be in context of n variables
 data Exp (n : ℕ) : Set where
-   --  `_ : Fin n → Exp n -- expression with n variables
     var_ : Fin n → Exp n
-    zeroᴾ : Exp n -- expression with n variables (not necessarily all of them)
-    -- x + y is an expression in x, y, z
+    zeroᴾ : Exp n 
     sucᴾ : Exp n → Exp n
     _+ᴾ_ : Exp n → Exp n → Exp n
     _*ᴾ_ : Exp n → Exp n → Exp n
 
+
 data Formula (n : ℕ) : Set where
---   `_  : AtomicFormula → Formula n          -- atomic formula
-  ⊤ᵖ   : Formula n                          -- truth (unicode \top)
-  ⊥ᵖ   : Formula n                          -- falsehood (unicode \bot)
-  _∧ᵖ_ : Formula n → Formula n → Formula n       -- conjunction (unicode \wedge)
-  _∨ᵖ_ : Formula n → Formula n → Formula n       -- disjunction (unicode \vee)
-  _⇒ᵖ_ : Formula n → Formula n → Formula n       -- implication (unicode \=>)
-  all_ : Formula (suc n) → Formula n                 -- for all \forall\forall
+  ⊤ᵖ   : Formula n                                      -- truth (unicode \top)
+  ⊥ᵖ   : Formula n                                      -- falsehood (unicode \bot)
+  _∧ᵖ_ : Formula n → Formula n → Formula n              -- conjunction (unicode \wedge)
+  _∨ᵖ_ : Formula n → Formula n → Formula n              -- disjunction (unicode \vee)
+  _⇒ᵖ_ : Formula n → Formula n → Formula n              -- implication (unicode \=>)
+  all_ : Formula (suc n) → Formula n                    -- for all \forall\forall
   some_ : Formula (suc n) → Formula n                   -- exists \exists
-  _≈ᵖ_ : Exp n → Exp n → Formula n -- ≈ᵖ is \approx
+  _≈ᵖ_ : Exp n → Exp n → Formula n                      -- ≈ᵖ is \approx
 
 
 infixr 6 _∧ᵖ_
@@ -61,8 +55,20 @@ infixr 4 _⇒ᵖ_
 infix 3 all_
 infix 3 some_
 
--- Substitution
+{- 
+Substitutions
 
+For terms (expressions) and formulas we define:
+- substitution 
+       - for expressions : takes the substitution (n, m) and an expression in n variables and returns an expression in m variables
+       - for formulas : takes the substitution (n, m) and a formula in n variables and returns a formula in m variables
+- shift
+       - for expressions : shifts the expression from Exp n to Exp suc n
+       - for formulas : shifts the formula from Formula n to Formula m
+       - for substitutions : shifts the substitution from Sub m n to Sub (suc m) (suc n)
+-}
+
+-- Sub n m is a function!
 Sub : ℕ → ℕ → Set
 Sub n m = Fin n → Exp m
 
@@ -90,6 +96,7 @@ shift-Formula (all Ψ) = all (shift-Formula Ψ)
 shift-Formula (some Ψ) = some (shift-Formula Ψ)
 shift-Formula (t ≈ᵖ u) = (shift-Exp t) ≈ᵖ (shift-Exp u)
 
+-- Sub n m = Fin n → Exp m
 shift : {n m : ℕ} → Sub n m → Sub (suc n) (suc m)
 shift σ Fin.zero = var Fin.zero
 shift σ (Fin.suc x) = shift-Exp (σ x)
@@ -98,9 +105,9 @@ subst-Formula : {n m : ℕ} → Sub n m → Formula n → Formula m
 subst-Formula σ ⊤ᵖ = ⊤ᵖ
 subst-Formula σ ⊥ᵖ = ⊥ᵖ
 subst-Formula σ (Ψ ∧ᵖ Θ) = subst-Formula σ Ψ ∧ᵖ subst-Formula σ Θ
-subst-Formula σ (Ψ ∨ᵖ Θ) = subst-Formula σ Ψ ∨ᵖ subst-Formula σ Θ -- a
-subst-Formula σ (Ψ ⇒ᵖ Θ) = subst-Formula σ Ψ ⇒ᵖ subst-Formula σ Θ -- a
-subst-Formula σ (all Ψ) = all (subst-Formula (shift σ) Ψ) -- a - enako kot some?
+subst-Formula σ (Ψ ∨ᵖ Θ) = subst-Formula σ Ψ ∨ᵖ subst-Formula σ Θ 
+subst-Formula σ (Ψ ⇒ᵖ Θ) = subst-Formula σ Ψ ⇒ᵖ subst-Formula σ Θ 
+subst-Formula σ (all Ψ) = all (subst-Formula (shift σ) Ψ) 
 subst-Formula σ (some Ψ) = some (subst-Formula (shift σ) Ψ)
 subst-Formula σ (s ≈ᵖ t) = (subst-Exp σ s ≈ᵖ subst-Exp σ t)
 
@@ -121,6 +128,8 @@ Hypotheses : ℕ → Set
 Hypotheses n = List (Formula n)
 
 {-
+   From exercises : 
+
    We use constructor instances when defining the formula-in-hypotheses
    membership relation `∈`. This way we will be able to use instance
    search to fill in these arguments when constructing derivations.
@@ -140,6 +149,7 @@ data _∈_ {A : Set} : A → List A → Set where
   ∈-there : {x y : A} {xs : List A} → {{x ∈ xs}} → x ∈ (y ∷ xs)
 
 
+-- shift all the formulas in hypotheses from Formula n to Formula suc n
 shift-Hypos : {n : ℕ} → Hypotheses n → Hypotheses (suc n)
 shift-Hypos [] = []
 shift-Hypos (x ∷ Δ) = (shift-Formula x) ∷ shift-Hypos Δ
@@ -148,6 +158,8 @@ shift-Hypos (x ∷ Δ) = (shift-Formula x) ∷ shift-Hypos Δ
 infixl 2 _,_⊢_
 data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set where    -- unicode \vdash
 
+
+  -- basis taken from exercises, added context of n variables
 
   -- hypotheses
 
@@ -236,27 +248,24 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
           → (t : Exp n)
           → n , Δ ⊢ all φ
           -----------------
-          → n , Δ ⊢ subst-Formula (subst₀ t) φ
+          → n , Δ ⊢ subst-Formula (subst₀ t) φ  -- subst₀ t ≈ Sub (suc n) n 
 
--- subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
--- subst₀ t Fin.zero = t
--- subst₀ t (Fin.suc x) = var x
 
-  all-intro : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
-           → {φ : Formula (suc n)} -- x not in freevariables(Δ)
+  all-intro : {n : ℕ} → {Δ : Hypotheses n} 
+           → {φ : Formula (suc n)} 
            → suc n , shift-Hypos Δ ⊢ φ
          --------------------------
-           → n , Δ ⊢ all φ -- TODO
+           → n , Δ ⊢ all φ
 
 
-  some-intro : {n : ℕ} → {Δ : Hypotheses n} -- a
+  some-intro : {n : ℕ} → {Δ : Hypotheses n} 
             → {φ : Formula (suc n)}
             → (t : Exp n)
             → n , Δ ⊢ subst-Formula (subst₀ t) φ  -- φ[t/y]
             -------------------------------------
             → n , Δ ⊢ some φ
 
-  some-elim : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
+  some-elim : {n : ℕ} → {Δ : Hypotheses n} 
             → {φ : Formula (suc n)}
             → {ψ : Formula n}
             → n , Δ ⊢ some φ
@@ -296,49 +305,48 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
 
   -- Peano axioms
 
-  -- katere izpeljave manjkajo glej: http://www.andrej.com/zapiski/ISRM-LOGRAC-2022/05-logic.lagda.html
+  -- source: http://www.andrej.com/zapiski/ISRM-LOGRAC-2022/05-logic.lagda.html
 
-
-  -- prvi : no succesor is equal to zero
-  p-zero : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
+  -- first : no succesor is equal to zero
+  p-zero : {n : ℕ} → {Δ : Hypotheses n} 
          → {t : Exp n}
          -----------------------
          →  n , Δ ++ [ sucᴾ t ≈ᵖ zeroᴾ ] ⊢ ⊥ᵖ
 
 
-  -- drugi
+  -- second
   p-suc : {n : ℕ} → {Δ : Hypotheses n}
         → {t u : Exp n}
         → n , Δ ⊢ sucᴾ t ≈ᵖ sucᴾ u
         -----------------------
         → n , Δ ⊢ t ≈ᵖ u
 
-  -- tretji
+  -- third
   p-sum : {n : ℕ} → {Δ : Hypotheses n}
          → {u : Exp n}
          ------------------------
          → n , Δ ⊢ (zeroᴾ +ᴾ u) ≈ᵖ u
 
-  -- četrti
+  -- fourth
   p-sumsuc : {n : ℕ} → {Δ : Hypotheses n}
          → {t u : Exp n}
          ------------------------------------
          → n , Δ ⊢ ((sucᴾ t) +ᴾ u) ≈ᵖ sucᴾ (t +ᴾ u)
 
-   -- peti
+   -- fifth
   p-prod : {n : ℕ} → {Δ : Hypotheses n}
          → {u : Exp n}
          ---------------
          → n , Δ ⊢ (zeroᴾ *ᴾ u) ≈ᵖ zeroᴾ
 
-  -- šesti
+  -- sixth
   p-prodsum : {n : ℕ} → {Δ : Hypotheses n}
          → {t u : Exp n}
          ------------------
          → n , Δ ⊢ ((sucᴾ t) *ᴾ u) ≈ᵖ (u +ᴾ (t *ᴾ u))
 
-  -- sedmi
-  p-induc : {n : ℕ} → {Δ : Hypotheses n} -- govorilna
+  -- seventh
+  p-induc : {n : ℕ} → {Δ : Hypotheses n}
          → {φ : Formula (suc n)}
          → (t : Exp n)
          → n , Δ ⊢ subst-Formula (subst₀ zeroᴾ) φ
@@ -347,6 +355,3 @@ data _,_⊢_ : (n : ℕ) → (Δ : Hypotheses n) → (φ : Formula n) → Set wh
          → n , Δ ⊢ subst-Formula (subst₀ t) φ
 
 
--- subst₀ : {n : ℕ} → Exp n → Sub (suc n) n
--- subst₀ t Fin.zero = t
--- subst₀ t (Fin.suc x) = var x

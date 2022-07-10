@@ -62,12 +62,12 @@ module Semantics where
   proj-hypothesis : {n : ℕ} {Δ : Hypotheses n} {η : Valuation n} {φ : Formula n} →
                     ⟦ Δ ⟧ʰ η → φ ∈ Δ → ⟦ φ ⟧ᶠ η
   proj-hypothesis H ∈-here = proj₁ H
-  proj-hypothesis {Δ = x ∷ x₁ ∷ xs} H ∈-there = proj-hypothesis (proj₂ H) {!   !}
+  proj-hypothesis H ∈-there = proj-hypothesis (proj₂ H) _
 
   --- (for soundness of p-zero)
   proj-last-hypothesis : {n : ℕ} {Δ : Hypotheses n} {η : Valuation n} {φ : Formula n} → ⟦ Δ ⟧ʰ η → ⟦ φ ⟧ᶠ η
-  proj-last-hypothesis {Δ = x ∷ []} H = proj₁ {!   !}
-  proj-last-hypothesis {Δ = []} H = {!   !}
+  proj-last-hypothesis {Δ = x ∷ []} H = {!   !}
+  proj-last-hypothesis {Δ = []}  H = {! !}
   proj-last-hypothesis {Δ = _ ∷ Δ} (x , H) = proj-last-hypothesis H
 
 
@@ -186,13 +186,13 @@ module Semantics where
  
   -- equality
   soundness Δ (≈-refl t) η H = refl -- surprisingly
-  soundness Δ (≈-subt P Q) η H = {!!}
+  soundness Δ (≈-subt P Q) η H = subst {!  !} {!  !} {!    !}
   soundness Δ (≈-sym P) η H = sym (soundness Δ P η H)
   soundness Δ (≈-trans P Q) η H = trans (soundness Δ P η H) (soundness Δ Q η H)
 
 
   -- peano
-  soundness Δ p-zero η H = 1+n≢0 {! !}
+  soundness Δ p-zero η H = 1+n≢0 {!  !}
   soundness Δ (p-suc P) η H = cong-suc (soundness Δ P η H)
                                   where
                                       cong-suc : {x y : ℕ} → (suc x) ≡ (suc y) → x ≡ y

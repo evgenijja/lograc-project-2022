@@ -73,7 +73,14 @@ module Semantics where
 
 
   unshift-formula : {n k : ℕ} {φ : Formula n} {η : Valuation n} → ⟦ shift-Formula φ ⟧ᶠ (Ext-valuation η k) → ⟦ φ ⟧ᶠ η
-  unshift-formula p = {! !}
+  unshift-formula {φ = ⊤ᵖ} {η = η} P = tt
+  unshift-formula {φ = φ ∧ᵖ φ₁} {η = η} P = (unshift-formula (proj₁ P)) , (unshift-formula (proj₂ P))
+  unshift-formula {φ = φ ∨ᵖ φ₁} {η = η} P = {!   !}
+
+  unshift-formula {φ = φ ⇒ᵖ φ₁} {η = η} P = {!   !}
+  unshift-formula {φ = ∀ᵖ φ} {η = η} P = {!   !}
+  unshift-formula {φ = ∃ᵖ φ} {η = η} P = {!   !}
+  unshift-formula {φ = x ≈ᵖ x₁} {η = η} P = {!   !}
 
   unext-val : ∀ {n : ℕ} → Valuation (suc n) → ℕ → Valuation n 
   unext-val {n = k} η n = {!   !}
